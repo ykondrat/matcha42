@@ -1,5 +1,6 @@
-var User = require('./models/user');
-var Location = require('./models/location');
+var User            = require('./models/user');
+var Location        = require('./models/location');
+const fs            = require('fs');
 
 module.exports = (app, passport, uploads) => {
     // Main route of site
@@ -58,9 +59,7 @@ module.exports = (app, passport, uploads) => {
                     }
                 });
             } 
-        });    
-        
-        
+        });
     });
 
     // Google+ routes
@@ -195,8 +194,7 @@ module.exports = (app, passport, uploads) => {
                 throw err;
             }
             if (user) {
-
-
+                //fs.unlinkSync(path)
                 if (user.local.email) {
                     req.files.forEach((photo, index) => {
                         path = photo.path.substring(6);
@@ -238,9 +236,8 @@ module.exports = (app, passport, uploads) => {
                 });
             }
         });
-        console.log(req.files);
-        console.log(req.body.id);
     });
+
     app.use(function(req, res, next) {
         var err = new Error('Not Found');
         err.status = 404;

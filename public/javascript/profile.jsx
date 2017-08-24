@@ -17,18 +17,31 @@ var ProfileHeader = React.createClass({
 		window.location.href = "http://localhost:8000/logout"
 	},
 	handleSettings: function() {
-		let profileInfo = document.querySelector('.profile-main');
+		let profile = document.querySelector('.profile-main');
 		let profileSettings = document.querySelector('.profile-settings');
-		
-		// profileInfo.classList.add('close');
-		// profileSettings.classList.remove('close');
+		let profileSettingsPhoto = document.querySelector('.profile-settings-photo');
+
+		profileSettings.style.display = 'block';
+		profileSettingsPhoto.style.display = 'none';
+		profile.style.display = 'none';
 	},
 	handleProfile: function() {
 		let profile = document.querySelector('.profile-main');
 		let profileSettings = document.querySelector('.profile-settings');
+		let profileSettingsPhoto = document.querySelector('.profile-settings-photo');
 
-		// profile.classList.remove('close');
-		// profileSettings.classList.add('close');
+		profileSettings.style.display = 'none';
+		profileSettingsPhoto.style.display = 'none';
+		profile.style.display = 'block';
+	},
+	handlePhotos: function() {
+		let profile = document.querySelector('.profile-main');
+		let profileSettings = document.querySelector('.profile-settings');
+		let profileSettingsPhoto = document.querySelector('.profile-settings-photo');
+
+		profileSettings.style.display = 'none';
+		profileSettingsPhoto.style.display = 'block';
+		profile.style.display = 'none';
 	},
 	render: function() {
 		var imgStyle = {
@@ -225,35 +238,37 @@ var ProfileSettings = React.createClass({
         	<div className="container profile-settings">
         		<div className="profile-view">
         			<h1 id="settings-header">Settings</h1>
-        			<div>
-	        			<label htmlFor="user-gender">Gender: </label>
-	        			<select name="gender" id="user-gender" onChange={this.handleGender} value={this.state.gender} >
-	        				<option value="male">male</option>
-	        				<option value="female">female</option>
-	        			</select>
-        			</div>
-        			<div>
-	        			<label htmlFor="user-sexual">Sexual orientation: </label>
-	        			<select name="sexual" id="user-sexual" onChange={this.handleSexual} value={this.state.sexual} >
-	        				<option value="heterosexual">heterosexual</option>
-	        				<option value="homosexual">homosexual</option>
-	        				<option value="bisexual">bisexual</option>
-	        			</select>
-        			</div>
-        			<div>
-	        			<label htmlFor="user-birthday">Birthday: </label>
-	        			<input type="date" name="birthDate" id="user-birthday" onChange={this.handleBirthday} value={this.state.birthday}/>
-        			</div>
-        			<div>
-	        			<label htmlFor="user-interests">Interests: </label>
-	        			<textarea name="interests" id="user-interests" placeholder="#sport #javascript" onChange={this.handleInterest} value={this.state.interests}></textarea>
-        			</div>
-        			<div>
-	        			<label htmlFor="user-biography">About: </label>
-	        			<textarea name="interests" id="user-biography" onChange={this.handleAbout} value={this.state.about}></textarea>
-        			</div>
-        			<div>
-        				<button className="btn btn-success" onClick={this.handleSave}>Save</button>
+        			<div className="form-settings">
+	        			<div className="form-control">
+		        			<label htmlFor="user-gender">Gender: </label>
+		        			<select name="gender" id="user-gender" onChange={this.handleGender} value={this.state.gender} >
+		        				<option value="male">male</option>
+		        				<option value="female">female</option>
+		        			</select>
+	        			</div>
+	        			<div className="form-control">
+		        			<label htmlFor="user-sexual">Orientation: </label>
+		        			<select name="sexual" id="user-sexual" onChange={this.handleSexual} value={this.state.sexual} >
+		        				<option value="heterosexual">heterosexual</option>
+		        				<option value="homosexual">homosexual</option>
+		        				<option value="bisexual">bisexual</option>
+		        			</select>
+	        			</div>
+	        			<div className="form-control">
+		        			<label htmlFor="user-birthday">Birthday: </label>
+		        			<input type="date" name="birthDate" id="user-birthday" onChange={this.handleBirthday} value={this.state.birthday}/>
+	        			</div>
+	        			<div className="form-control">
+		        			<label htmlFor="user-interests">Interests: </label>
+		        			<textarea name="interests" id="user-interests" placeholder="#sport #javascript" onChange={this.handleInterest} value={this.state.interests}></textarea>
+	        			</div>
+	        			<div className="form-control">
+		        			<label htmlFor="user-biography">About: </label>
+		        			<textarea name="interests" id="user-biography" onChange={this.handleAbout} value={this.state.about}></textarea>
+	        			</div>
+	        			<div>
+	        				<button className="btn btn-success" onClick={this.handleSave}>Save</button>
+	        			</div>
         			</div>
         		</div>
         	</div>    
@@ -329,7 +344,7 @@ var ProfilePhoto = React.createClass({
 					</div>
 
 		return (
-			<div className="container profile-settings">
+			<div className="container profile-settings-photo">
         		<div className="profile-view">
         			<h1>User photo</h1>
     				<form action="/photo" method="post" encType="multipart/form-data" >

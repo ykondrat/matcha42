@@ -9,8 +9,9 @@ const bodyParser    = require('body-parser');
 const sass          = require('node-sass-middleware');
 const passport      = require('passport');
 const flash         = require('connect-flash');
-const multer		= require('multer');
-const storage		= multer.diskStorage({
+const MongoStore    = require('connect-mongo')(session);
+const multer		    = require('multer');
+const storage       = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, 'public/uploads/');
 	},
@@ -47,7 +48,8 @@ app.use(cookieParser());
 app.use(session({
                     secret: 'anyStringOfText',
                     saveUninitialized: true,
-                    resave: true
+                    resave: true,
+                    store: new MongoStore({ mongooseConnection: mongoose.connection })
                 }));
 
 app.use(passport.initialize());
