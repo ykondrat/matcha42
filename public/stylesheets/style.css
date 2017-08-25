@@ -9,50 +9,112 @@
   position: fixed;
   z-index: -2; }
 
-input[type="file"] {
-  opacity: 0;
-  position: absolute;
-  left: 38%;
-  width: 25vmin;
-  height: 25vmin; }
-  input[type="file"]:hover {
-    cursor: pointer; }
-
 .fix-header {
   margin-top: -100px;
   width: 100%;
   position: fixed;
-  z-index: 10;
-  display: block; }
+  z-index: 10; }
 
-.errorActive {
-  font-size: 2vmin;
+@media screen and (max-width: 575px) {
+  .navbar-toggler {
+    margin-right: -50px; } }
+
+.navbar-toggler:hover {
+  cursor: pointer; }
+
+.user-info {
+  display: inline;
+  margin: 0 20px 0 20px;
+  font-weight: bold; }
+  @media screen and (max-width: 575px) {
+    .user-info {
+      margin-left: -20px; } }
+  .user-info .user-name {
+    padding-left: 7px; }
+  .user-info .profile img {
+    border: 2px solid #468939; }
+  .user-info .profile:hover {
+    cursor: pointer; }
+  .user-info:hover {
+    cursor: pointer; }
+
+@media screen and (max-width: 575px) {
+  .user-name {
+    display: none; } }
+
+.nav-btn {
+  background-color: transparent; }
+
+.nav-btn:hover {
+  cursor: pointer; }
+
+.fa-bell-o {
+  margin-left: 15px; }
+
+.badge-important {
+  margin-top: -5px;
+  margin-left: 25px;
+  position: absolute;
+  background-color: rgba(157, 223, 116, 0.5);
+  border-radius: 50%; }
+
+.profile-settings {
+  margin-top: 100px;
+  display: none; }
+
+#settings-header {
+  margin-bottom: 7px;
+  margin-top: 7px;
   font-weight: bold;
-  color: #F64741; }
+  color: #D2D2D2;
+  text-shadow: 2px 2px #468939; }
 
-.userfullname {
-  font-size: 3vmin;
-  font-weight: bold;
-  color: white;
-  text-shadow: 2px 2px #000; }
+.form-settings {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left; }
 
-.user-email {
-  font-size: 2vmin;
+.form-control {
+  clear: both;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: right;
+  width: 70%;
+  margin-bottom: 7px; }
+
+.form-control select, input, textarea {
+  width: 183px;
+  border: 2px solid #468939;
+  border-radius: 7px;
+  padding: 7px; }
+  @media screen and (max-width: 460px) {
+    .form-control select, input, textarea {
+      width: 143px; } }
+  @media screen and (max-width: 360px) {
+    .form-control select, input, textarea {
+      width: 123px; } }
+
+.form-control label {
+  float: left;
+  padding-bottom: 15px;
   font-weight: bold; }
 
-.user-rating {
-  font-size: 2vmin;
-  font-weight: bold;
-  color: #468939;
-  padding-bottom: 20px; }
+.form-btn {
+  text-align: center;
+  margin-top: 7px;
+  padding-bottom: 7px; }
+  .form-btn button {
+    font-weight: bold; }
+    .form-btn button:hover {
+      cursor: pointer; }
+
+.error-settings {
+  color: #FF3C3C;
+  font-weight: bold; }
 
 .profile-main {
   margin-top: 100px;
   display: block; }
-
-.profile-settings {
-  display: none;
-  margin-top: 100px; }
 
 .profile-settings-photo {
   display: none;
@@ -71,55 +133,10 @@ input[type="file"] {
   border-radius: 20px;
   background-color: rgba(255, 255, 255, 0.5); }
 
-.fa-bell-o {
-  margin-left: 15px; }
-
-.badge-important {
-  margin-top: -5px;
-  margin-left: 25px;
-  position: absolute;
-  background-color: rgba(157, 223, 116, 0.5);
-  border-radius: 50%; }
-
 .profile-img {
   width: 35vmin;
   height: 35vmin;
   margin: 30px auto 30px auto;
   border-radius: 50%; }
-
-.profile:hover {
-  cursor: pointer; }
-
-.user-info {
-  display: inline;
-  margin: 0 20px 0 20px; }
-  .user-info .user-name {
-    padding-left: 7px; }
-
-@media screen and (max-width: 370px) {
-  .user-name {
-    display: none; } }
-
-.nav-btn {
-  background-color: transparent; }
-
-.nav-btn:hover {
-  cursor: pointer; }
-
-.form-settings {
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left; }
-
-.form-control {
-  clear: both;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: right;
-  width: 70%; }
-
-.form-control label {
-  float: left;
-  padding-bottom: 15px; }
 
 /*# sourceMappingURL=style.css.map */

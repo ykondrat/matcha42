@@ -1,52 +1,38 @@
-#particles
-    background: url(http://localhost:8000/images/matcha.jpg) 100% 100% no-repeat;
-    background-size: cover
-    overflow: hidden
-    top: 0               
-    bottom: 0
-    left: 0
-    right: 0
-    position: fixed
-    z-index: -2
+@import header
+@import profile
+@import settings
 
-input[type="file"]
-    opacity: 0
-    position: absolute
-    left: 38%
-    width: 25vmin
-    height: 25vmin
-    &:hover
-        cursor: pointer
-.fix-header
-    margin-top: -100px
-    width: 100%
-    position: fixed
-    z-index: 10
-    display: block
+// input[type="file"]
+//     opacity: 0
+//     position: absolute
+//     left: 38%
+//     width: 25vmin
+//     height: 25vmin
+//     &:hover
+//         cursor: pointer
 
-.errorActive
-    font-size: 2vmin
-    font-weight: bold
-    color: #F64741
-.userfullname
-    font-size: 3vmin
-    font-weight: bold
-    color: white
-    text-shadow: 2px 2px #000;
-.user-email
-    font-size: 2vmin
-    font-weight: bold
-.user-rating
-    font-size: 2vmin
-    font-weight: bold
-    color: #468939
-    padding-bottom: 20px
+
+// .errorActive
+//     font-size: 2vmin
+//     font-weight: bold
+//     color: #F64741
+// .userfullname
+//     font-size: 3vmin
+//     font-weight: bold
+//     color: white
+//     text-shadow: 2px 2px #000;
+// .user-email
+//     font-size: 2vmin
+//     font-weight: bold
+// .user-rating
+//     font-size: 2vmin
+//     font-weight: bold
+//     color: #468939
+//     padding-bottom: 20px
 .profile-main
     margin-top: 100px
     display: block
-.profile-settings
-    display: none
-    margin-top: 100px
+
 .profile-settings-photo
     display: none
     margin-top: 100px
@@ -62,57 +48,9 @@ input[type="file"]
 	border-radius: 20px
 	background-color: rgba(255, 255, 255, 0.5)
 
-.fa-bell-o
-	margin-left: 15px
-
-.badge-important 
-    margin-top: -5px
-    margin-left: 25px
-    position: absolute
-    background-color: rgba(157, 223, 116, 0.5)
-    border-radius: 50%
-
 .profile-img
-	width: 35vmin
-	height: 35vmin
-	margin: 30px auto 30px auto
-	border-radius: 50%
-
-.profile:hover
-	cursor: pointer
-
-.user-info
-	display: inline
-	margin: 0 20px 0 20px
-
-	.user-name
-		padding-left: 7px
-.user-name
-	@media screen and (max-width: 370px) 
-		display: none;
-
-.nav-btn
-    background-color: rgba(0, 0, 0, 0);
-.nav-btn:hover
-    cursor: pointer
-
-.form-settings 
-    margin-left: auto
-    margin-right: auto
-    text-align: left
-
-.form-control 
-    clear: both
-    margin-left: auto
-    margin-right: auto
-    text-align: right
-    width: 70%
-
-
-.form-control label
-    float: left
-    padding-bottom: 15px
-
-
-
+    width: 35vmin
+    height: 35vmin
+    margin: 30px auto 30px auto
+    border-radius: 50%
 

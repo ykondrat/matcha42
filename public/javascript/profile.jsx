@@ -10,34 +10,39 @@ if (User.local.email) {
 }
 
 var ProfileHeader = React.createClass({
+	
 	handleNotification: function () {
 		console.log('click');	
 	},
+
 	handleLogout: function() {
 		window.location.href = "http://localhost:8000/logout"
 	},
+	
 	handleSettings: function() {
-		let profile = document.querySelector('.profile-main');
-		let profileSettings = document.querySelector('.profile-settings');
-		let profileSettingsPhoto = document.querySelector('.profile-settings-photo');
+		let profile 				= document.querySelector('.profile-main');
+		let profileSettings 		= document.querySelector('.profile-settings');
+		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 
 		profileSettings.style.display = 'block';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
 	},
+	
 	handleProfile: function() {
-		let profile = document.querySelector('.profile-main');
-		let profileSettings = document.querySelector('.profile-settings');
-		let profileSettingsPhoto = document.querySelector('.profile-settings-photo');
+		let profile 				= document.querySelector('.profile-main');
+		let profileSettings 		= document.querySelector('.profile-settings');
+		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'block';
 	},
+
 	handlePhotos: function() {
-		let profile = document.querySelector('.profile-main');
-		let profileSettings = document.querySelector('.profile-settings');
-		let profileSettingsPhoto = document.querySelector('.profile-settings-photo');
+		let profile 				= document.querySelector('.profile-main');
+		let profileSettings 		= document.querySelector('.profile-settings');
+		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'block';
@@ -51,41 +56,42 @@ var ProfileHeader = React.createClass({
 		};
         return (
         	<div className="fix-header">
-            <nav className="navbar navbar-toggleable-md navbar-inverse bg-inverse">
-					<button className="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="navigation">
-						<span className="navbar-toggler-icon"></span>
-					</button>
-  				<div className="navbar-brand user-info" href="http://localhost:8000/profile">
-  					<div className="user-info" onClick={this.handleProfile}>matcha</div>
-  					<div className="user-info profile">
-  						<img src={this.props.user.avatar} style={imgStyle} onClick={this.handleProfile}/>
-  						
-  						<span className="badge badge-important">0</span><i className="fa fa-bell-o fa-lg" aria-hidden="true" onClick={this.handleNotification}></i>
-  						
-  						<span className="user-name">{this.props.user.firstName}</span>	
-  					</div>
-  				</div>
-  				
-				<div className="collapse navbar-collapse" id="navigation">
-					<ul className="navbar-nav mr-auto mt-2 mt-md-0">
-				    	<li className="nav-item">
-				    		<button className="btn nav-link nav-btn" onClick={this.handleSettings}>Settings</button>
-				    	</li>
-				    	<li className="nav-item">
-				    		<button className="btn nav-link nav-btn" onClick={this.handlePhotos}>Photos</button>
-				    	</li>
-				    	<li className="nav-item">
-				     		<button className="btn nav-link nav-btn" onClick={this.handleMesages}>Messages</button>
-				    	</li>
-				    	<li className="nav-item">
-				    		<button className="btn nav-link nav-btn" onClick={this.handleSearch}>Search</button>
-				    	</li>
-				    	<li className="nav-item">
-				    		<button className="btn nav-link nav-btn" onClick={this.handleLogout}>Logout</button>
-				    	</li>
-				    </ul>
-				</div>
-			</nav>
+	            <nav className="navbar navbar-toggleable-md navbar-inverse bg-inverse">
+					<div className="container">
+						<button className="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="navigation">
+							<span className="navbar-toggler-icon"></span>
+						</button>
+		  				<div className="navbar-brand user-info" href="http://localhost:8000/profile">
+		  					<div className="user-info" onClick={this.handleProfile}>matcha</div>
+		  					<div className="user-info profile">
+		  						<img src={this.props.user.avatar} style={imgStyle} onClick={this.handleProfile}/>
+		  						
+		  						<span className="badge badge-important">0</span><i className="fa fa-bell-o fa-lg" aria-hidden="true" onClick={this.handleNotification}></i>
+		  						
+		  						<span className="user-name" onClick={this.handleProfile}>{this.props.user.firstName}</span>	
+		  					</div>
+		  				</div>
+						<div className="collapse navbar-collapse" id="navigation">
+							<ul className="navbar-nav mr-auto mt-2 mt-md-0">
+						    	<li className="nav-item">
+						    		<button className="btn nav-link nav-btn" onClick={this.handleSettings}>Settings</button>
+						    	</li>
+						    	<li className="nav-item">
+						    		<button className="btn nav-link nav-btn" onClick={this.handlePhotos}>Photos</button>
+						    	</li>
+						    	<li className="nav-item">
+						     		<button className="btn nav-link nav-btn" onClick={this.handleMesages}>Messages</button>
+						    	</li>
+						    	<li className="nav-item">
+						    		<button className="btn nav-link nav-btn" onClick={this.handleSearch}>Search</button>
+						    	</li>
+						    	<li className="nav-item">
+						    		<button className="btn nav-link nav-btn" onClick={this.handleLogout}>Logout</button>
+						    	</li>
+						    </ul>
+						</div>
+					</div>
+				</nav>
 			</div>
         );
     }
@@ -162,7 +168,8 @@ var ProfileInfo = React.createClass({
 });
 
 var ProfileSettings = React.createClass({
-	getInitialState() {
+	
+	getInitialState: function() {
         return {
             gender: this.props.user.gender || 'male',
             sexual: this.props.user.sexual || 'heterosexual',
@@ -171,22 +178,28 @@ var ProfileSettings = React.createClass({
             about: this.props.user.biography || ''
         };
     },
-    handleGender(event) {
+
+    handleGender: function(event) {
     	this.setState({ gender: event.target.value });
     },
-    handleSexual(event) {
+    
+    handleSexual: function(event) {
     	this.setState({ sexual: event.target.value });
     },
-    handleBirthday(event) {
+    
+    handleBirthday: function(event) {
     	this.setState({ birthday: event.target.value });
     },
-    handleInterest(event) {
+    
+    handleInterest: function(event) {
 		this.setState({ interests: event.target.value });
     },
-    handleAbout(event) {
+    
+    handleAbout: function(event) {
     	this.setState({ about: event.target.value });	
     },
-    handleSave() {
+    
+    handleSave: function(event) {
     	$('.error-settings').remove();
     	var interests = this.state.interests.split(' ');
     	var regexp = /\B#\w*[a-zA-Z0-9]+\w*/;
@@ -207,13 +220,13 @@ var ProfileSettings = React.createClass({
        		senderAbout = false;
     	}
     	if (this.state.birthday == '') {
-    		$( "<p class='error-settings'>Please provide your birhday</p>" ).insertAfter( "#settings-header" );
+    		$("<p class='error-settings'>Please provide your birhday</p>").insertAfter("#settings-header");
     	}
     	if (!senderInterest) {
-    		$( "<p class='error-settings'>Please provide your interest</p>" ).insertAfter( "#settings-header" );
+    		$("<p class='error-settings'>Please provide your interest</p>").insertAfter("#settings-header");
     	}
     	if (!senderAbout) {
-    		$( "<p class='error-settings'>Please provide your biography</p>" ).insertAfter( "#settings-header" );
+    		$("<p class='error-settings'>Please provide your biography</p>").insertAfter("#settings-header");
     	}
     	if (senderAbout && senderInterest && this.state.birthday != '') {
     		var data = {
@@ -224,6 +237,7 @@ var ProfileSettings = React.createClass({
             	interests: this.state.interests,
             	about: this.state.about
     		}
+
     		$.ajax({
     			type: 'POST',
         		url: 'http://localhost:8000/user-info',
@@ -233,6 +247,7 @@ var ProfileSettings = React.createClass({
     		window.location.href = 'http://localhost:8000/profile';
     	}
     },
+
 	render: function() {
         return (
         	<div className="container profile-settings">
@@ -266,7 +281,7 @@ var ProfileSettings = React.createClass({
 		        			<label htmlFor="user-biography">About: </label>
 		        			<textarea name="interests" id="user-biography" onChange={this.handleAbout} value={this.state.about}></textarea>
 	        			</div>
-	        			<div>
+	        			<div className="form-btn">
 	        				<button className="btn btn-success" onClick={this.handleSave}>Save</button>
 	        			</div>
         			</div>
