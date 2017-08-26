@@ -11,44 +11,61 @@ if (User.local.email) {
 
 var ProfileHeader = React.createClass({
 	
-	handleNotification: function () {
+	handleNotification() {
 		console.log('click');	
 	},
 
-	handleLogout: function() {
+	handleLogout() {
 		window.location.href = "http://localhost:8000/logout"
 	},
 	
-	handleSettings: function() {
+	handleSettings() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
+		let profileModify 			= document.querySelector('.profile-modify');
 
 		profileSettings.style.display = 'block';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
+		profileModify.style.display = 'none';
 	},
-	
-	handleProfile: function() {
+	handleModify() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
-
+		let profileModify 			= document.querySelector('.profile-modify');
+		
+		profileSettings.style.display = 'none';
+		profileSettingsPhoto.style.display = 'none';
+		profile.style.display = 'none';
+		profileModify.style.display = 'block';
+	},
+	
+	handleProfile() {
+		let profile 				= document.querySelector('.profile-main');
+		let profileSettings 		= document.querySelector('.profile-settings');
+		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
+		let profileModify 			= document.querySelector('.profile-modify');
+		
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'block';
+		profileModify.style.display = 'none';
 	},
 
-	handlePhotos: function() {
+	handlePhotos() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
+		let profileModify 			= document.querySelector('.profile-modify');
 
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'block';
 		profile.style.display = 'none';
+		profileModify.style.display = 'none';
 	},
-	render: function() {
+	render() {
 		var imgStyle = {
 			width: '50px',
 			height: '50px',
@@ -75,6 +92,9 @@ var ProfileHeader = React.createClass({
 							<ul className="navbar-nav mr-auto mt-2 mt-md-0">
 						    	<li className="nav-item">
 						    		<button className="btn nav-link nav-btn" onClick={this.handleSettings}>Settings</button>
+						    	</li>
+						    	<li className="nav-item">
+						    		<button className="btn nav-link nav-btn" onClick={this.handleModify}>Modify</button>
 						    	</li>
 						    	<li className="nav-item">
 						    		<button className="btn nav-link nav-btn" onClick={this.handlePhotos}>Photos</button>
@@ -167,9 +187,119 @@ var ProfileInfo = React.createClass({
     }
 });
 
+var ProfileModify = React.createClass({
+	
+	getInitialState() {
+        return {
+            firstName: this.props.user.firstName,
+            lastName: this.props.user.lastName,
+            email: this.props.user.email,
+            password: ''
+        };
+    },
+
+    handleFirstName(event) {
+    	this.setState({ firstName: event.target.value });
+    },
+    
+    handleLastName(event) {
+    	this.setState({ lastName: event.target.value });
+    },
+    
+    handleEmail(event) {
+    	this.setState({ email: event.target.value });
+    },
+    
+    handlePassword(event) {
+		this.setState({ password: event.target.value });
+    },
+       
+    handleSave(event) {
+    	$('.error-settings').remove();
+    	var nameFilter = /^[A-Za-z]+$/;
+	    var emailFilter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+	    let sender = true;
+
+	    if (!(this.state.firstName.length >= 2 && nameFilter.test(this.state.firstName) && this.state.firstName.length <= 16)) {
+	    	$("<p class='error-settings'>Please provide valid first name</p>").insertAfter("#modify-header");
+	    	sender = false;
+	    }
+	    if (!(this.state.lastName.length >= 2 && nameFilter.test(this.state.lastName) && this.state.lastName.length <= 16)) {
+	    	$("<p class='error-settings'>Please provide valid last name</p>").insertAfter("#modify-header");
+	    	sender = false;
+	    }
+	    if (this.props.user.password) {
+	    	if (!emailFilter.test(this.state.email)) {
+	    		$("<p class='error-settings'>Please provide valid email</p>").insertAfter("#modify-header");
+	    		sender = false;
+	    	}
+	    	if (!(this.state.password.length >= 6 && this.state.password.length <= 40)) {
+	    		$("<p class='error-settings'>Password more then 6 characters</p>").insertAfter("#modify-header");
+	    		sender = false;
+	    	}
+	    }
+	    if (sender) {
+	    	var data = {
+    			id: UserID,
+    			firstName: this.state.firstName,
+            	lastName: this.state.lastName,
+            	email: this.state.email,
+            	password: this.state.password
+    		}
+
+    		$.ajax({
+    			type: 'POST',
+        		url: 'http://localhost:8000/user-modify',
+        		dataType: 'json',
+        		data: data
+    		});
+    		window.location.href = 'http://localhost:8000/profile';
+	    }
+    },
+
+	render() {
+		let localUser = null;
+
+		if (this.props.user.password) {
+			localUser = <div>
+							<div className="form-control">
+			        			<label htmlFor="user-email">Email: </label>
+			        			<input type="email" name="email" id="user-email" onChange={this.handleEmail} value={this.state.email} />
+		        			</div>
+		        			<div className="form-control">
+			        			<label htmlFor="user-password">Password: </label>
+			        			<input type="password" name="password" id="user-password" onChange={this.handlePassword} value={this.state.password} />
+		        			</div>
+	        			</div>
+		}
+
+        return (
+        	<div className="container profile-modify">
+        		<div className="profile-view">
+        			<h1 id="modify-header">Modify</h1>
+        			<div className="form-settings">
+	        			<div className="form-control">
+		        			<label htmlFor="user-firstName">First name: </label>
+		        			<input type="text" name="firstName" id="user-firstName" onChange={this.handleFirstName} value={this.state.firstName} />
+	        			</div>
+	        			<div className="form-control">
+		        			<label htmlFor="user-lastName">Last name: </label>
+		        			<input type="text" name="lastName" id="user-lastName" onChange={this.handleLastName} value={this.state.lastName} />
+	        			</div>
+	        			{ localUser }
+	        			<div className="form-btn">
+	        				<button className="btn btn-success" onClick={this.handleSave}>Save</button>
+	        			</div>
+        			</div>
+        		</div>
+        	</div>    
+        );
+    }
+});
+
 var ProfileSettings = React.createClass({
 	
-	getInitialState: function() {
+	getInitialState() {
         return {
             gender: this.props.user.gender || 'male',
             sexual: this.props.user.sexual || 'heterosexual',
@@ -179,27 +309,27 @@ var ProfileSettings = React.createClass({
         };
     },
 
-    handleGender: function(event) {
+    handleGender(event) {
     	this.setState({ gender: event.target.value });
     },
     
-    handleSexual: function(event) {
+    handleSexual(event) {
     	this.setState({ sexual: event.target.value });
     },
     
-    handleBirthday: function(event) {
+    handleBirthday(event) {
     	this.setState({ birthday: event.target.value });
     },
     
-    handleInterest: function(event) {
+    handleInterest(event) {
 		this.setState({ interests: event.target.value });
     },
     
-    handleAbout: function(event) {
+    handleAbout(event) {
     	this.setState({ about: event.target.value });	
     },
     
-    handleSave: function(event) {
+    handleSave(event) {
     	$('.error-settings').remove();
     	var interests = this.state.interests.split(' ');
     	var regexp = /\B#\w*[a-zA-Z0-9]+\w*/;
@@ -248,7 +378,7 @@ var ProfileSettings = React.createClass({
     	}
     },
 
-	render: function() {
+	render() {
         return (
         	<div className="container profile-settings">
         		<div className="profile-view">
@@ -304,56 +434,108 @@ var ProfilePhoto = React.createClass({
 			document.querySelector(`.${event.target.name}`).src = "";
 		}
 	},
+	handleDeletePhoto(event) {	
+		if (document.querySelector(`.${event.target.attributes.name.value}`).src != 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png') {
+			var data = {
+				id: UserID,
+				photo: event.target.attributes.name.value
+			}
+			document.querySelector(`.${event.target.attributes.name.value}`).src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png';
+			$.ajax({
+	    			type: 'POST',
+	        		url: 'http://localhost:8000/delete-photo',
+	        		dataType: 'json',
+	        		data: data
+	    		});
+		}
+	},
+	handleSetAvatar(event) {
+		if (document.querySelector(`.${event.target.attributes.name.value}`).src != 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png') {
+			let checker = document.querySelector(`.${event.target.attributes.name.value}`).src.slice(0,4);
+			
+			if (checker != 'data') {
+				var data = {
+					id: UserID,
+					photo: event.target.attributes.name.value
+				}
+				let tmp = document.querySelector(`.${event.target.attributes.name.value}`).src;
+				
+				document.querySelector(`.${event.target.attributes.name.value}`).src = document.querySelector('.avatar').src;
+				document.querySelector('.avatar').src = tmp;
+				document.querySelector('.user-info img').src = tmp;
+				document.querySelector('.profile-img').src = tmp;
+
+				$.ajax({
+	    			type: 'POST',
+	        		url: 'http://localhost:8000/set-avatar',
+	        		dataType: 'json',
+	        		data: data
+		    	});
+			}
+		}
+	},
 	handleSave() {
 		console.log('click');
 	}, 
 	render() {
 		let avatar = this.props.user.avatar;
 		let photos = {
-			photo1: '',
-            photo2: '',
-            photo3: '',
-            photo4: ''
+			photo1: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png',
+            photo2: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png',
+            photo3: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png',
+            photo4: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png'
 		}
 		let userPhoto = null;
 
 		if (this.props.user.photos) {
-			photos.photo1 = this.props.user.photos.photo1;
-			photos.photo2 = this.props.user.photos.photo2;
-			photos.photo3 = this.props.user.photos.photo3;
-			photos.photo4 = this.props.user.photos.photo4;
+			if (this.props.user.photos.photo1) {
+				photos.photo1 = this.props.user.photos.photo1;	
+			}
+			if (this.props.user.photos.photo2) {
+				photos.photo2 = this.props.user.photos.photo2;	
+			}
+			if (this.props.user.photos.photo3) {
+				photos.photo3 = this.props.user.photos.photo3;	
+			}
+			if (this.props.user.photos.photo4) {
+				photos.photo4 = this.props.user.photos.photo4;	
+			}
 		}
 		userPhoto = <div>
-						<div>
+						<div className="photo-user">
+							<img src={ avatar } alt="" className="avatar upload-photo" />
+							<input type="file" name="avatar" accept="image/*,image/jpeg,image/png" onChange={this.handlePhoto}/>
+						</div>
+						<div className="photo-user">
 							<img src={photos.photo1} alt="" className="photo1 upload-photo" />
 							<input type="file" name="photo1" accept="image/*,image/jpeg,image/png" onChange={this.handlePhoto}/>
-							<div>
-								<button className="btn btn-danger">Delete <i className="fa fa-trash-o" aria-hidden="true"></i></button>
-								<button className="btn btn-primary">On Avatar <i className="fa fa-user-circle-o" aria-hidden="true"></i></button>
+							<div className="photo-btn">
+								<p className="btn btn-danger" name="photo1" onClick={ this.handleDeletePhoto }><i className="fa fa-trash-o" name="photo1" aria-hidden="true"></i></p>
+								<p className="btn btn-primary" name="photo1" onClick={ this.handleSetAvatar }><i className="fa fa-user-circle-o" name="photo1" aria-hidden="true"></i></p>
 							</div>
 						</div>
-						<div>
+						<div  className="photo-user">
 							<img src={photos.photo2} alt="" className="photo2 upload-photo" />
 							<input type="file" name="photo2" accept="image/*,image/jpeg,image/png" onChange={this.handlePhoto}/>
-							<div>
-								<button className="btn btn-danger">Delete <i className="fa fa-trash-o" aria-hidden="true"></i></button>
-								<button className="btn btn-primary">On Avatar <i className="fa fa-user-circle-o" aria-hidden="true"></i></button>
+							<div className="photo-btn">
+								<p className="btn btn-danger" name="photo2" onClick={ this.handleDeletePhoto }><i className="fa fa-trash-o" name="photo2" aria-hidden="true"></i></p>
+								<p className="btn btn-primary" name="photo2" onClick={ this.handleSetAvatar }><i className="fa fa-user-circle-o" name="photo2" aria-hidden="true"></i></p>
 							</div>
 						</div>
-						<div>
+						<div className="photo-user">
 							<img src={photos.photo3} alt="" className="photo3 upload-photo" />
 							<input type="file" name="photo3" accept="image/*,image/jpeg,image/png" onChange={this.handlePhoto}/>
-							<div>
-								<button className="btn btn-danger">Delete <i className="fa fa-trash-o" aria-hidden="true"></i></button>
-								<button className="btn btn-primary">On Avatar <i className="fa fa-user-circle-o" aria-hidden="true"></i></button>
+							<div className="photo-btn">
+								<p className="btn btn-danger" name="photo3" onClick={ this.handleDeletePhoto }><i className="fa fa-trash-o" name="photo3" aria-hidden="true"></i></p>
+								<p className="btn btn-primary" name="photo3" onClick={ this.handleSetAvatar }><i className="fa fa-user-circle-o" name="photo3" aria-hidden="true"></i></p>
 							</div>
 						</div>
-						<div>
+						<div className="photo-user">
 							<img src={photos.photo4} alt="" className="photo4 upload-photo" />	
 							<input type="file" name="photo4" accept="image/*,image/jpeg,image/png" onChange={this.handlePhoto}/>
-							<div>
-								<button className="btn btn-danger">Delete <i className="fa fa-trash-o" aria-hidden="true"></i></button>
-								<button className="btn btn-primary">On Avatar <i className="fa fa-user-circle-o" aria-hidden="true"></i></button>
+							<div className="photo-btn">
+								<p className="btn btn-danger" name="photo4" onClick={ this.handleDeletePhoto }><i className="fa fa-trash-o"  name="photo4" aria-hidden="true"></i></p>
+								<p className="btn btn-primary" name="photo4" onClick={ this.handleSetAvatar }><i className="fa fa-user-circle-o" name="photo4" aria-hidden="true"></i></p>
 							</div>
 						</div>
 					</div>
@@ -361,16 +543,11 @@ var ProfilePhoto = React.createClass({
 		return (
 			<div className="container profile-settings-photo">
         		<div className="profile-view">
-        			<h1>User photo</h1>
+        			<h1 className="photo-header">User photo</h1>
     				<form action="/photo" method="post" encType="multipart/form-data" >
     					<input type="hidden" name="id" value={ UserID }/>
-	    				<div>
-	    					<h5>Avatar</h5>
-	    					<img src={this.props.user.avatar} className="avatar upload-photo" alt={this.props.user.lastName} />
-	    					<input type="file" name="avatar" accept="image/*,image/jpeg,image/png" onChange={this.handlePhoto}/>
-	    				</div>
 	    				{ userPhoto }
-	    				<div>
+	    				<div className="form-photo-btn">
 	        				<button type="submit" className="btn btn-success" onClick={this.handleSave}>Save</button>
 	        			</div>
 	        		</form>
@@ -385,6 +562,7 @@ ReactDOM.render(
     	<ProfileHeader user={User} />
     	<ProfileInfo user={User} />
     	<ProfileSettings user={User} />
+    	<ProfileModify user={User} />
     	<ProfilePhoto user={User} />
     </div>,
     document.getElementById('content')

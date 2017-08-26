@@ -67,3 +67,26 @@ function validForm() {
     
     return (false);
 }
+
+function sendEmail() {
+    var emailFilter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    $('.error-forgot').remove();
+    $('.server-answer').remove();
+
+    if (!emailFilter.test($('#forgot-email').val())) {
+        $("<p class='error-forgot'>Please provide valid email</p>").insertAfter("#ModalLabel");
+    } else {
+        var data = {
+            email: $('#forgot-email').val()
+        }
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8000/forgot-password',
+            dataType: 'json',
+            data: data,
+            success: function(response) {
+                $("<p class='server-answer'>" + response.msg + "</p>").insertAfter("#ModalLabel");
+            }
+        });
+    }
+}

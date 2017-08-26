@@ -17,6 +17,21 @@ block content
                     input(type="password", name="password", placeholder="Password")
                     br
                     input.btn.btn-success(type="submit", value="SignIn")
+                    br
+                    p(class="forgot-passord", data-toggle="modal", data-target="#forgot-modal") Forgot password?
+                
+                div(class="modal fade", id="forgot-modal", tabindex="-1", role="dialog", aria-labelledby="ModalLabel",aria-hidden="true")
+                    div(class="modal-dialog", role="document")
+                        div(class="modal-content")
+                            div(class="modal-header")
+                                h5(class="modal-title", id="ModalLabel") Forgot password
+                                button(type="button", class="close", data-dismiss="modal", aria-label="Close")
+                                    span(aria-hidden="true") &times;
+                            div(class="modal-body")
+                                input(type="email", name="forgot-email", placeholder="email", id="forgot-email")
+                            div(class="modal-footer")
+                                button(type="button", class="btn btn-danger", data-dismiss="modal") Close
+                                button(type="button", class="btn btn-success", onclick="sendEmail()") Send
             p Sign In
             p ykondrat &copy; 2017
         div.panel.panel3

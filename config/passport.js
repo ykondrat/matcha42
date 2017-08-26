@@ -1,9 +1,9 @@
-const LocalStrategy = require('passport-local').Strategy;
-const FacebookStrategy = require('passport-facebook');
-const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-const User = require('../app/models/user');
-const Location = require('../app/models/location');
-const configAuth = require('./auth');
+const LocalStrategy     = require('passport-local').Strategy;
+const FacebookStrategy  = require('passport-facebook');
+const GoogleStrategy    = require('passport-google-oauth').OAuth2Strategy;
+const User              = require('../app/models/user');
+const Location          = require('../app/models/location');
+const configAuth        = require('./auth');
 
 module.exports = (passport) => {
     passport.serializeUser((user, done) => {
@@ -34,7 +34,7 @@ module.exports = (passport) => {
                             throw err;
                         }
                         if (location) {
-                             var newUser = new User();
+                            var newUser = new User();
                             newUser.local.firstName = req.body.firstName;
                             newUser.local.lastName = req.body.lastName;
                             newUser.local.email = email;

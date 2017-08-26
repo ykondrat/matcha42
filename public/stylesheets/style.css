@@ -63,8 +63,8 @@
   display: none; }
 
 #settings-header {
-  margin-bottom: 7px;
-  margin-top: 7px;
+  padding-bottom: 7px;
+  padding-top: 7px;
   font-weight: bold;
   color: #D2D2D2;
   text-shadow: 2px 2px #468939; }
@@ -112,9 +112,23 @@
   color: #FF3C3C;
   font-weight: bold; }
 
-.profile-main {
+.profile-modify {
   margin-top: 100px;
-  display: block; }
+  display: none; }
+
+#modify-header {
+  padding-bottom: 7px;
+  padding-top: 7px;
+  font-weight: bold;
+  color: #D2D2D2;
+  text-shadow: 2px 2px #468939; }
+
+.photo-header {
+  padding-bottom: 7px;
+  padding-top: 7px;
+  font-weight: bold;
+  color: #D2D2D2;
+  text-shadow: 2px 2px #468939; }
 
 .profile-settings-photo {
   display: none;
@@ -125,6 +139,34 @@
   height: 25vmin; }
   .upload-photo:hover {
     cursor: pointer; }
+
+input[type="file"] {
+  opacity: 0;
+  position: absolute;
+  left: 38%;
+  width: 25vmin;
+  height: 25vmin; }
+  input[type="file"]:hover {
+    cursor: pointer; }
+
+.photo-user {
+  margin: 7px auto 7px auto; }
+
+.photo-btn p {
+  font-size: 3vmin;
+  margin: 7px; }
+
+.form-photo-btn {
+  margin-top: 7px;
+  padding-bottom: 7px; }
+  .form-photo-btn button {
+    font-weight: bold; }
+    .form-photo-btn button:hover {
+      cursor: pointer; }
+
+.profile-main {
+  margin-top: 100px;
+  display: block; }
 
 .profile-view {
   text-align: center;

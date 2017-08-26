@@ -1,6 +1,15 @@
 var User            = require('./models/user');
 var Location        = require('./models/location');
 const fs            = require('fs');
+const nodemailer    = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'kondratyev.yevhen@gmail.com',
+        pass: ''
+    }
+});
 
 module.exports = (app, passport, uploads) => {
     // Main route of site
@@ -13,17 +22,89 @@ module.exports = (app, passport, uploads) => {
         res.render('profile', { title: 'matcha profile', user: JSON.stringify(req.user) });
     });
     
+    // Logout from site
     app.get('/logout', (req, res) => {
         req.logout();
         res.redirect('/');
     });
     
+    // Forgot password
+    app.post('/forgot-password', (req, res) => {
+        User.findOne({ 'local.email': req.body.email }, (err, user) => {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                var length = 16;
+                var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                var newPassword = "";
+                
+                for (var i = 0, n = charset.length; i < length; ++i) {
+                    newPassword += charset.charAt(Math.floor(Math.random() * n));
+                }
+                var newUser = new User;
+                user.local.password = newUser.generateHash(newPassword);
+
+                var mailOptions = {
+                    from: 'kondratyev.yevhen@gmail.com',
+                    to: user.local.email,
+                    subject: 'New Password in Matcha',
+                    html: `
+                            <div style="width: 100%;
+                                    height: 100%;
+                                    background: url(http://localhost:8000/images/matcha.jpg) 100% 100% no-repeat;
+                                    background-size: cover">
+                                <h1 style="margin: 0 10px 0 10px;
+                                    padding: 7px;
+                                    font-size: 6vmin;
+                                    font-weight: bold;">Your new password to <span style="color: #70E97A;
+                                    text-shadow: 2px 2px #000;">matcha</span></h1>
+                                <h3 style="margin: 0 10px 0 10px;
+                                    padding: 7px;
+                                    font-size: 4vmin;">Password: ${newPassword}</h3>
+                                <a href="http://localhost:8000" style="font-size: 4vmin;
+                                    margin: 0 10px 0 10px;
+                                    padding: 7px;
+                                    background-color: #70E97A;
+                                    color: white;
+                                    font-weight: bold;
+                                    border-radius: 4px; 
+                                    text-decoration: none;  ">Go to matcha</a>
+                                <p style="margin: 0 10px 0 10px;
+                                    padding: 7px;
+                                    font-size: 3vmin;">ykondrat &copy; 2017</p>
+                            </div>`
+                };
+
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log('Email sent: ' + info.response);
+                    }
+                });
+
+                user.save(function(err, updatedUser){
+                    if (err)
+                        throw err;
+                    if (updatedUser) {
+                        res.send({msg: 'Password was sent on your mail'});
+                    }
+                });
+            } else {
+                res.send({msg: 'No such email locally registered'});
+            }
+        });
+    });
+
+    // Sigin with passport.js
     app.post('/signin', passport.authenticate('local-signin', {
         successRedirect: '/profile',
         failureRedirect: '/',
         failureFlash: true
     }));
     
+    // Signup with passport.js
     app.post('/signup', passport.authenticate('local-signup', {
         successRedirect: '/profile',
         failureRedirect: '/',
@@ -110,6 +191,7 @@ module.exports = (app, passport, uploads) => {
                     location.save(function (err) {
                         if (err)
                             throw err;
+                        res.sendStatus(200);
                     });
                 } else {
                     var newLocation = new Location();
@@ -122,6 +204,7 @@ module.exports = (app, passport, uploads) => {
                     newLocation.save(function(err) {
                         if (err)
                            throw err;
+                        res.sendStatus(200);
                     });
                 }
             });
@@ -187,21 +270,61 @@ module.exports = (app, passport, uploads) => {
         });
     });
 
-    // Set Use photo and avatar
+    // Modify user props
+    app.post('/user-modify', (req, res) => {
+        User.findById(req.body.id, function (err, user) {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                if (user.local.email) {
+                    user.local.firstName = req.body.firstName;
+                    user.local.lastName = req.body.lastName;
+                    user.local.email = req.body.email;
+
+                    if (req.body.password != '') {
+                        var newUser = new User;
+                        user.local.password = newUser.generateHash(req.body.password);
+                    }
+                } else if (user.facebook.email) {
+                    user.facebook.firstName = req.body.firstName;
+                    user.facebook.lastName = req.body.lastName;
+                } else {
+                    user.google.firstName = req.body.firstName;
+                    user.google.lastName = req.body.lastName;
+                }
+
+                user.save(function(err, updatedUser){
+                    if (err)
+                        throw err;
+                    if (updatedUser) {
+                        res.sendStatus(200);
+                    }
+                });
+            }
+        });
+    });
+
+    // Set User photo and avatar
     app.post('/photo', uploads.any(), (req, res) => {
         User.findById(req.body.id, function (err, user) {
             if (err) {
                 throw err;
             }
             if (user) {
-                //fs.unlinkSync(path)
                 if (user.local.email) {
                     req.files.forEach((photo, index) => {
                         path = photo.path.substring(6);
                         
                         if (photo.fieldname == 'avatar') {
+                            if (user.local.avatar == 'https://www.worldskills.org/components/angular-worldskills-utils/images/user.png') {
+                                user.local.fameRating += 10;
+                            }
                             user.local.avatar = `http://localhost:8000${path}`;
                         } else {
+                            if (user.local.photos[photo.fieldname] == '' || !user.local.photos[photo.fieldname]) {
+                                user.local.fameRating += 10;
+                            }
                             user.local.photos[photo.fieldname] = `http://localhost:8000${path}`;
                         }
                     });
@@ -212,6 +335,9 @@ module.exports = (app, passport, uploads) => {
                         if (photo.fieldname == 'avatar') {
                             user.facebook.avatar = `http://localhost:8000${path}`;
                         } else {
+                            if (user.facebook.photos[photo.fieldname] == '' || !user.facebook.photos[photo.fieldname]) {
+                                user.facebook.fameRating += 10;
+                            }
                             user.facebook.photos[photo.fieldname] = `http://localhost:8000${path}`;
                         }
                     });
@@ -222,6 +348,9 @@ module.exports = (app, passport, uploads) => {
                         if (photo.fieldname == 'avatar') {
                             user.google.avatar = `http://localhost:8000${path}`;
                         } else {
+                            if (user.google.photos[photo.fieldname] == '' || !user.google.photos[photo.fieldname]) {
+                                user.google.fameRating += 10;
+                            }
                             user.google.photos[photo.fieldname] = `http://localhost:8000${path}`;
                         }
                     });
@@ -231,9 +360,91 @@ module.exports = (app, passport, uploads) => {
                     if (err)
                         throw err;
                     if (updatedUser) {
-                        res.redirect('/profile');
+                        res.sendStatus(200);
                     }
                 });
+            }
+        });
+    });
+
+    //Delete User photo
+    app.post('/delete-photo', (req, res) => {
+        User.findById(req.body.id, function (err, user) {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                if (user.local.email) {
+                    let photo = user.local.photos[req.body.photo].split('\\'); // for Windows 
+                    photo = photo[photo.length - 1];
+                    let path = __dirname + '/../public/uploads/' + photo;
+                    user.local.photos[req.body.photo] = "";
+                    user.local.fameRating -= 10;
+
+                    if (fs.existsSync(path)) {
+                        fs.unlinkSync(path);
+                    }   
+                } else if (user.facebook.email) {
+                    let photo = user.facebook.photos[req.body.photo].split('\\'); // for Windows 
+                    photo = photo[photo.length - 1];
+                    let path = __dirname + '/../public/uploads/' + photo;
+                    user.facebook.photos[req.body.photo] = "";
+                    user.facebook.fameRating -= 10;
+
+                    if (fs.existsSync(path)) {
+                        fs.unlinkSync(path);
+                    } 
+                } else {
+                    let photo = user.google.photos[req.body.photo].split('\\'); // for Windows 
+                    photo = photo[photo.length - 1];
+                    let path = __dirname + '/../public/uploads/' + photo;
+                    user.google.photos[req.body.photo] = "";
+                    user.google.fameRating -= 10;
+
+                    if (fs.existsSync(path)) {
+                        fs.unlinkSync(path);
+                    } 
+                }
+
+                user.save(function(err, updatedUser){
+                    if (err)
+                        throw err;
+                    if (updatedUser) {
+                        res.sendStatus(200);
+                    }
+                });             
+            }
+        });
+    });
+
+    //Set Avatar
+    app.post('/set-avatar', (req, res) => {
+        User.findById(req.body.id, function (err, user) {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                if (user.local.email) {
+                    let tmp = user.local.photos[req.body.photo];
+                    user.local.photos[req.body.photo] = user.local.avatar;
+                    user.local.avatar = tmp;
+                } else if (user.facebook.email) {
+                    let tmp = user.facebook.photos[req.body.photo];
+                    user.facebook.photos[req.body.photo] = user.facebook.avatar;
+                    user.facebook.avatar = tmp;
+                } else {
+                    let tmp = user.google.photos[req.body.photo];
+                    user.google.photos[req.body.photo] = user.google.avatar;
+                    user.google.avatar = tmp;
+                }
+
+                user.save(function(err, updatedUser){
+                    if (err)
+                        throw err;
+                    if (updatedUser) {
+                        res.sendStatus(200);
+                    }
+                });             
             }
         });
     });
