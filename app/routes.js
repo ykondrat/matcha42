@@ -17,11 +17,20 @@ module.exports = (app, passport, uploads) => {
         res.render('index', { title: 'matcha signup', message: req.flash('errorMessage') });
     });
     
-    //Profile route
+    // Profile route
     app.get('/profile', isLoggedOn, (req, res) => {
-        res.render('profile', { title: 'matcha profile', user: JSON.stringify(req.user) });
+        res.render('profile', { title: 'matcha profile', user: req.user });
     });
     
+    // Search route
+    app.post('/search/:id', isLoggedOn, (req, res) => {
+        console.log(req.body);
+        console.log(req.params.id);
+        // User.find({}, (err, data) => {
+        //     res.send(data);
+        // });
+    });
+
     // Logout from site
     app.get('/logout', (req, res) => {
         req.logout();
@@ -322,9 +331,12 @@ module.exports = (app, passport, uploads) => {
                             }
                             user.local.avatar = `http://localhost:8000${path}`;
                         } else {
-                            if (user.local.photos[photo.fieldname] == '' || !user.local.photos[photo.fieldname]) {
+                            if (!user.local.photos) {
+                                user.local.fameRating += 10;
+                            } else if (user.local.photos[photo.fieldname] == '' || !user.local.photos[photo.fieldname]) {
                                 user.local.fameRating += 10;
                             }
+                            
                             user.local.photos[photo.fieldname] = `http://localhost:8000${path}`;
                         }
                     });
@@ -335,9 +347,12 @@ module.exports = (app, passport, uploads) => {
                         if (photo.fieldname == 'avatar') {
                             user.facebook.avatar = `http://localhost:8000${path}`;
                         } else {
-                            if (user.facebook.photos[photo.fieldname] == '' || !user.facebook.photos[photo.fieldname]) {
+                            if (!user.facebook.photos) {
+                                user.facebook.fameRating += 10;
+                            } else if (user.facebook.photos[photo.fieldname] == '' || !user.facebook.photos[photo.fieldname]) {
                                 user.facebook.fameRating += 10;
                             }
+
                             user.facebook.photos[photo.fieldname] = `http://localhost:8000${path}`;
                         }
                     });
@@ -348,9 +363,12 @@ module.exports = (app, passport, uploads) => {
                         if (photo.fieldname == 'avatar') {
                             user.google.avatar = `http://localhost:8000${path}`;
                         } else {
-                            if (user.google.photos[photo.fieldname] == '' || !user.google.photos[photo.fieldname]) {
+                            if (!user.google.photos) {
+                                user.google.fameRating += 10;
+                            } else if (user.google.photos[photo.fieldname] == '' || !user.google.photos[photo.fieldname]) {
                                 user.google.fameRating += 10;
                             }
+
                             user.google.photos[photo.fieldname] = `http://localhost:8000${path}`;
                         }
                     });
@@ -360,7 +378,7 @@ module.exports = (app, passport, uploads) => {
                     if (err)
                         throw err;
                     if (updatedUser) {
-                        res.sendStatus(200);
+                        res.redirect('/profile');
                     }
                 });
             }
@@ -375,7 +393,7 @@ module.exports = (app, passport, uploads) => {
             }
             if (user) {
                 if (user.local.email) {
-                    let photo = user.local.photos[req.body.photo].split('\\'); // for Windows 
+                    let photo = user.local.photos[req.body.photo].split('/'); 
                     photo = photo[photo.length - 1];
                     let path = __dirname + '/../public/uploads/' + photo;
                     user.local.photos[req.body.photo] = "";
@@ -385,7 +403,7 @@ module.exports = (app, passport, uploads) => {
                         fs.unlinkSync(path);
                     }   
                 } else if (user.facebook.email) {
-                    let photo = user.facebook.photos[req.body.photo].split('\\'); // for Windows 
+                    let photo = user.facebook.photos[req.body.photo].split('/'); 
                     photo = photo[photo.length - 1];
                     let path = __dirname + '/../public/uploads/' + photo;
                     user.facebook.photos[req.body.photo] = "";
@@ -395,7 +413,7 @@ module.exports = (app, passport, uploads) => {
                         fs.unlinkSync(path);
                     } 
                 } else {
-                    let photo = user.google.photos[req.body.photo].split('\\'); // for Windows 
+                    let photo = user.google.photos[req.body.photo].split('/'); 
                     photo = photo[photo.length - 1];
                     let path = __dirname + '/../public/uploads/' + photo;
                     user.google.photos[req.body.photo] = "";

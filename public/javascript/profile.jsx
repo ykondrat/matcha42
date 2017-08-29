@@ -1,5 +1,29 @@
-var User = JSON.parse(JSON.parse(document.getElementById('dialog_wrapper').dataset.text));
+var User = JSON.parse(document.getElementById('dialog_wrapper').dataset.text);
 var UserID = User._id;
+var limit = 1;
+//Users = Users.filter(item => item._id !== UserID);
+
+$(document).ready(function() {
+	$(window).scroll(function() {
+		if ($(document).height() - $(window).height() == $(window).scrollTop()) {
+			$('#loading').show();
+
+			/*
+            $.ajax({
+                url: 'get-post.php',
+                dataType: 'html',
+                success: function(html) {
+                    $('#posts').append(html);
+                    $('#loading').hide();
+                }
+            });
+            */
+
+			// $('#posts').append(randomPost()); Add new users
+            $('#loading').hide();
+		}
+	});
+});
 
 if (User.local.email) {
 	User = User.local;
@@ -24,22 +48,26 @@ var ProfileHeader = React.createClass({
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
+		let profileSearch 			= document.querySelector('.profile-search');
 
 		profileSettings.style.display = 'block';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
+		profileSearch.style.display = 'none';
 	},
 	handleModify() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
+		let profileSearch 			= document.querySelector('.profile-search');
 		
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
 		profileModify.style.display = 'block';
+		profileSearch.style.display = 'none';
 	},
 	
 	handleProfile() {
@@ -47,11 +75,13 @@ var ProfileHeader = React.createClass({
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
+		let profileSearch 			= document.querySelector('.profile-search');
 		
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'block';
 		profileModify.style.display = 'none';
+		profileSearch.style.display = 'none';
 	},
 
 	handlePhotos() {
@@ -59,12 +89,29 @@ var ProfileHeader = React.createClass({
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
+		let profileSearch 			= document.querySelector('.profile-search');
 
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'block';
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
+		profileSearch.style.display = 'none';
 	},
+
+	handleSearch() {
+		let profile 				= document.querySelector('.profile-main');
+		let profileSettings 		= document.querySelector('.profile-settings');
+		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
+		let profileModify 			= document.querySelector('.profile-modify');
+		let profileSearch 			= document.querySelector('.profile-search');
+
+		profileSettings.style.display = 'none';
+		profileSettingsPhoto.style.display = 'none';
+		profile.style.display = 'none';
+		profileModify.style.display = 'none';
+		profileSearch.style.display = 'block';
+	},
+
 	render() {
 		var imgStyle = {
 			width: '50px',
@@ -118,7 +165,8 @@ var ProfileHeader = React.createClass({
 });
 
 var ProfileInfo = React.createClass({
-	render: function() {
+	
+	render() {
 		let activeMsg = null;
     	let birthday = null;
     	let gender = null;
@@ -127,7 +175,7 @@ var ProfileInfo = React.createClass({
     	let biography = null;
 
 	    if (this.props.user.active == 0) {
-	    	activeMsg = <p className="errorActive">To make your profile active go to settings</p>;
+	    	activeMsg = <p className="errorActive">To make your profile active go to settings and add one photo</p>;
 	    }
 	    if (this.props.user.gender) {
 			gender = <p className="user-gender-profile">Gender: {this.props.user.gender}</p>;
@@ -422,7 +470,8 @@ var ProfileSettings = React.createClass({
 });
 
 var ProfilePhoto = React.createClass({
-	handlePhoto(event){
+	
+	handlePhoto(event) {
 		var reader  = new FileReader();
 
 		reader.onloadend = function () {
@@ -434,6 +483,7 @@ var ProfilePhoto = React.createClass({
 			document.querySelector(`.${event.target.name}`).src = "";
 		}
 	},
+
 	handleDeletePhoto(event) {	
 		if (document.querySelector(`.${event.target.attributes.name.value}`).src != 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png') {
 			var data = {
@@ -441,6 +491,8 @@ var ProfilePhoto = React.createClass({
 				photo: event.target.attributes.name.value
 			}
 			document.querySelector(`.${event.target.attributes.name.value}`).src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png';
+			let rating = parseInt(document.querySelector('.user-rating span:nth-child(2)').innerHTML) - 10;
+			document.querySelector('.user-rating span:nth-child(2)').innerHTML = rating;
 			$.ajax({
 	    			type: 'POST',
 	        		url: 'http://localhost:8000/delete-photo',
@@ -449,6 +501,7 @@ var ProfilePhoto = React.createClass({
 	    		});
 		}
 	},
+
 	handleSetAvatar(event) {
 		if (document.querySelector(`.${event.target.attributes.name.value}`).src != 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png') {
 			let checker = document.querySelector(`.${event.target.attributes.name.value}`).src.slice(0,4);
@@ -474,9 +527,7 @@ var ProfilePhoto = React.createClass({
 			}
 		}
 	},
-	handleSave() {
-		console.log('click');
-	}, 
+
 	render() {
 		let avatar = this.props.user.avatar;
 		let photos = {
@@ -548,9 +599,105 @@ var ProfilePhoto = React.createClass({
     					<input type="hidden" name="id" value={ UserID }/>
 	    				{ userPhoto }
 	    				<div className="form-photo-btn">
-	        				<button type="submit" className="btn btn-success" onClick={this.handleSave}>Save</button>
+	        				<button type="submit" className="btn btn-success">Save</button>
 	        			</div>
 	        		</form>
+        		</div>
+        	</div>
+		);		
+	}
+});
+
+var ProfileSearch = React.createClass({
+	
+	getInitialState() {
+        return {
+            gender: this.props.user.gender ==  'male' ? 'female' : 'male',
+            sexual: this.props.user.sexual || 'heterosexual',
+            age: 18
+        };
+    },
+
+    handleGender(event) {
+    	this.setState({ gender: event.target.value });
+    },
+    
+    handleSexual(event) {
+    	this.setState({ sexual: event.target.value });
+    },
+
+    handleAge(event) {
+    	this.setState({ age: event.target.age });
+    },
+
+    handleSearch() {
+    	var data = {};
+
+    	if ($('input[name="gender-check"]').is(':checked')) {
+    		data.gender = this.state.gender;
+    	}
+    	
+    	if ($('input[name="sexual-check"]').is(':checked')) {
+    		data.sexual = this.state.sexual;
+    	}
+    	
+    	if ($('input[name="age-check"]').is(':checked')) {
+    		data.age = this.state.age;
+    	}
+
+    	if (data.gender || data.sexual || data.age) {
+    		data.limit = limit;
+    		$.ajax({
+    			type: 'POST',
+        		url: 'http://localhost:8000/search/' + limit,
+        		dataType: 'json',
+        		data: data
+    		});
+    	}
+    },
+
+	render() {
+		return (
+			<div className="container profile-search">
+        		<div className="profile-view">
+        			<h1 id="search-header">Search module</h1>
+    				<div className="search-module">
+    					
+    					<div className="form-control">
+		        			<label htmlFor="user-gender-search"><input type="checkbox" name="gender-check" />Gender: </label>
+		        			<select name="gender" id="user-gender-search" onChange={this.handleGender} value={this.state.gender} >
+		        				<option value="male">male</option>
+		        				<option value="female">female</option>
+		        			</select>
+		        			
+	        			</div>
+	        			
+	        			<div className="form-control">
+		        			<label htmlFor="user-sexual-search"><input type="checkbox" name="sexual-check" />Orientation: </label>
+		        			<select name="sexual" id="user-sexual-search" onChange={this.handleSexual} value={this.state.sexual} >
+		        				<option value="heterosexual">heterosexual</option>
+		        				<option value="homosexual">homosexual</option>
+		        				<option value="bisexual">bisexual</option>
+		        			</select>
+		        			
+	        			</div>
+
+	        			<div className="form-control">
+		        			<label htmlFor="user-age-search"><input type="checkbox" name="age-check" />Age: </label>
+		        			<input type="number" name="age" id="user-age-search" value={this.state.age} onChange={this.handleAge}/>
+
+	        			</div>
+
+	        			<div className="form-btn">
+		        			<button className="btn btn-success" onClick={this.handleSearch}>Search</button>
+	        			</div>
+    				</div>
+    				<div className="search-users">
+    					
+    					<p id="loading">
+							<i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i>
+						</p>
+    				</div>
         		</div>
         	</div>
 		);		
@@ -564,6 +711,7 @@ ReactDOM.render(
     	<ProfileSettings user={User} />
     	<ProfileModify user={User} />
     	<ProfilePhoto user={User} />
+    	<ProfileSearch user={User} />	
     </div>,
     document.getElementById('content')
 );

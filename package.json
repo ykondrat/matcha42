@@ -8,9 +8,9 @@
     "start": "node server.js"
   },
   "author": "Yevhen Kondratyev (ykondrat)",
-  "repository" : { 
-    "type" : "git",
-    "url" : "https://github.com/ykondrat/matcha42.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ykondrat/matcha42.git"
   },
   "license": "ISC",
   "dependencies": {
