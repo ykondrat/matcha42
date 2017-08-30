@@ -76,8 +76,7 @@
 .user-rating {
   font-size: 2vmin;
   font-weight: bold;
-  color: #468939;
-  padding-bottom: 20px; }
+  color: #468939; }
 
 .profile-main {
   margin-top: 100px;
@@ -90,11 +89,21 @@
   border-radius: 20px;
   background-color: rgba(255, 255, 255, 0.5); }
 
+.profile-view {
+  padding-bottom: 20px; }
+
 .profile-img {
   width: 35vmin;
   height: 35vmin;
   margin: 30px auto 30px auto;
   border-radius: 50%; }
+
+.ldBar {
+  margin-left: auto;
+  margin-right: auto; }
+
+.ldBar-label {
+  display: none; }
 
 .profile-settings {
   margin-top: 100px;
@@ -139,8 +148,7 @@
 
 .form-btn {
   text-align: center;
-  margin-top: 7px;
-  padding-bottom: 7px; }
+  margin-top: 7px; }
   .form-btn button {
     font-weight: bold; }
     .form-btn button:hover {
@@ -226,5 +234,41 @@ input[type="checkbox"] {
   @media screen and (max-width: 360px) {
     input[type="checkbox"] {
       width: 13px; } }
+
+.user-search-profile {
+  margin: 20px auto 25px auto; }
+  .user-search-profile h3 {
+    color: #909090;
+    text-shadow: 1px 2px #000; }
+  .user-search-profile hr {
+    width: 80%;
+    height: 5px;
+    background: #7DE983;
+    background: -webkit-linear-gradient(left, #7DE983, #F2F04B);
+    background: -o-linear-gradient(right, #7DE983, #F2F04B);
+    background: -moz-linear-gradient(right, #7DE983, #F2F04B);
+    background: linear-gradient(to right, #7DE983, #F2F04B); }
+
+.fa-thumbs-o-up {
+  margin-right: 10px;
+  color: #7DE983; }
+  .fa-thumbs-o-up:hover {
+    cursor: pointer; }
+
+.fa-thumbs-o-down {
+  margin-left: 10px;
+  color: #E86A51; }
+  .fa-thumbs-o-down:hover {
+    cursor: pointer; }
+
+.btn-view {
+  font-weight: bold; }
+  .btn-view:hover {
+    cursor: pointer; }
+
+.user-search-photo {
+  width: 25vmin;
+  height: 25vmin;
+  border-radius: 50%; }
 
 /*# sourceMappingURL=style.css.map */

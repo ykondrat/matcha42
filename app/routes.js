@@ -25,10 +25,93 @@ module.exports = (app, passport, uploads) => {
     // Search route
     app.post('/search/:id', isLoggedOn, (req, res) => {
         console.log(req.body);
-        console.log(req.params.id);
-        // User.find({}, (err, data) => {
-        //     res.send(data);
-        // });
+        User.find({}, (err, data) => {
+            data = data.filter(item => item._id != req.body.id);
+
+            if (req.body.gender) {
+                data = data.filter((item) => {
+                    if (item.local.gender) {
+                        if (item.local.gender == req.body.gender) {
+                            return (true);
+                        }
+                    } else if (item.facebook.gender == req.body.gender) {
+                        return (true);
+                    } else if (item.google.gender == req.body.gender) {
+                        return (true);
+                    }
+                    return (false);
+                });
+            }
+            if (req.body.sexual) {
+                data = data.filter((item) => {
+                    if (item.local.sexual) {
+                        if (item.local.sexual == req.body.sexual) {
+                            return (true);
+                        }
+                    } else if (item.facebook.sexual) {
+                        if (item.facebook.sexual == req.body.sexual) {
+                            return (true);
+                        }
+                    } else if (item.google.sexual) {
+                        if (item.google.sexual == req.body.sexual) {
+                            return (true);
+                        }
+                    } 
+                    return (false);    
+                });
+            }
+            if (req.body.age) {
+                data = data.filter((item) => {
+                    if (item.local.birthDate) {
+                        var today = new Date();
+                        var birthDate = new Date(item.local.birthDate);
+                        var age = today.getFullYear() - birthDate.getFullYear();
+                        var m = today.getMonth() - birthDate.getMonth();
+                        
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            age--;
+                        }
+                        if (age == parseInt(req.body.age)) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else if (item.facebook.birthDate) {
+                        var today = new Date();
+                        var birthDate = new Date(item.facebook.birthDate);
+                        var age = today.getFullYear() - birthDate.getFullYear();
+                        var m = today.getMonth() - birthDate.getMonth();
+                        
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            age--;
+                        }
+                        if (age == parseInt(req.body.age)) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else if (item.google.birthDate) {
+                        var today = new Date();
+                        var birthDate = new Date(item.google.birthDate);
+                        var age = today.getFullYear() - birthDate.getFullYear();
+                        var m = today.getMonth() - birthDate.getMonth();
+                        
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            age--;
+                        }
+                        if (age == parseInt(req.body.age)) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    }
+                    return (false);
+                });
+            }
+
+            var sendData = data.slice(req.params.id, req.params.id + 5);
+            res.send(sendData);
+        });
     });
 
     // Logout from site
@@ -328,6 +411,9 @@ module.exports = (app, passport, uploads) => {
                         if (photo.fieldname == 'avatar') {
                             if (user.local.avatar == 'https://www.worldskills.org/components/angular-worldskills-utils/images/user.png') {
                                 user.local.fameRating += 10;
+                                if (user.local.gender && user.local.sexual && user.local.birthDate) {
+                                    user.local.active = 1;
+                                }
                             }
                             user.local.avatar = `http://localhost:8000${path}`;
                         } else {
@@ -463,6 +549,129 @@ module.exports = (app, passport, uploads) => {
                         res.sendStatus(200);
                     }
                 });             
+            }
+        });
+    });
+
+    // Set likes
+    app.post('/set-likes', (req, res) => {
+        User.findById(req.body.who, function (err, user) {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                var saver = false;
+
+                if (user.local.email) {
+                    if (!user.local.likedUser.includes(req.body.whom) && !user.local.dislikedUser.includes(req.body.whom)){
+                        user.local.likedUser.push(req.body.whom);
+                        saver = true;
+                    }
+                } else if (user.facebook.email) {
+                    if (!user.facebook.likedUser.includes(req.body.whom) && !user.facebook.dislikedUser.includes(req.body.whom)){
+                        user.facebook.likedUser.push(req.body.whom);
+                        saver = true;
+                    }
+                } else {
+                    if (!user.google.likedUser.includes(req.body.whom) && !user.google.dislikedUser.includes(req.body.whom)){
+                        user.google.likedUser.push(req.body.whom);
+                        saver = true;
+                    }
+                }
+
+                if (saver) {
+                    user.save(function(err, updatedUser){
+                        if (err)
+                            throw err;
+                        if (updatedUser) {
+                            User.findById(req.body.whom, function(err, user) {
+                                if (err) {
+                                    throw err;
+                                }
+                                if (user) {
+                                    if (user.local.email) {
+                                        user.local.fameRating += 10;
+                                    } else if (user.facebook.email) {
+                                        user.facebook.fameRating += 10;
+                                    } else {
+                                        user.google.fameRating += 10;
+                                    }                                
+                                }
+
+                                user.save(function (err, updatedUser) {
+                                    if (err)
+                                        throw err;
+                                    if (updatedUser) {
+                                        res.sendStatus(200);
+                                    }
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    res.sendStatus(200);
+                }      
+            }
+        });
+    });
+
+    app.post('/set-dislike', (req, res) => {
+        User.findById(req.body.who, function (err, user) {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                var saver = false;
+
+                if (user.local.email) {
+                    if (!user.local.likedUser.includes(req.body.whom) && !user.local.dislikedUser.includes(req.body.whom)){
+                        user.local.dislikedUser.push(req.body.whom);
+                        saver = true;
+                    }
+                } else if (user.facebook.email) {
+                    if (!user.facebook.likedUser.includes(req.body.whom) && !user.facebook.dislikedUser.includes(req.body.whom)){
+                        user.facebook.dislikedUser.push(req.body.whom);
+                        saver = true;
+                    }
+                } else {
+                    if (!user.google.likedUser.includes(req.body.whom) && !user.google.dislikedUser.includes(req.body.whom)){
+                        user.google.dislikedUser.push(req.body.whom);
+                        saver = true;
+                    }
+                }
+
+                if (saver) {
+                    user.save(function(err, updatedUser){
+                        if (err)
+                            throw err;
+                        if (updatedUser) {
+                            User.findById(req.body.whom, function(err, user) {
+                                if (err) {
+                                    throw err;
+                                }
+                                if (user) {
+                                    if (user.local.email) {
+                                        user.local.fameRating -= 5;
+                                    } else if (user.facebook.email) {
+                                        user.facebook.fameRating -= 5;
+                                    } else {
+                                        user.google.fameRating -= 5;
+                                    }                                
+                                }
+
+                                user.save(function (err, updatedUser) {
+                                    if (err)
+                                        throw err;
+                                    if (updatedUser) {
+                                        res.sendStatus(200);
+                                    }
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    res.sendStatus(200);
+                }      
             }
         });
     });

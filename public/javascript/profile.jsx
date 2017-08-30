@@ -1,7 +1,7 @@
 var User = JSON.parse(document.getElementById('dialog_wrapper').dataset.text);
 var UserID = User._id;
-var limit = 1;
-//Users = Users.filter(item => item._id !== UserID);
+var limit = 0;
+var dataSearch = {};
 
 $(document).ready(function() {
 	$(window).scroll(function() {
@@ -228,6 +228,7 @@ var ProfileInfo = React.createClass({
 	        		</div>
 	        		<div>
 						<p className="user-rating">Rating: {this.props.user.fameRating}</p>
+						<div className="ldBar" data-preset="energy" data-value= {this.props.user.fameRating} ></div>
 					</div>
         		</div>
         	</div>    
@@ -627,31 +628,86 @@ var ProfileSearch = React.createClass({
     },
 
     handleAge(event) {
-    	this.setState({ age: event.target.age });
+    	this.setState({ age: event.target.value });
     },
 
     handleSearch() {
-    	var data = {};
+    	$('.user-search-profile').remove();
+    	dataSearch.gender = '';
+    	dataSearch.sexual = '';
+    	dataSearch.age = '';
 
     	if ($('input[name="gender-check"]').is(':checked')) {
-    		data.gender = this.state.gender;
-    	}
-    	
+    		dataSearch.gender = this.state.gender;
+    	} 	
     	if ($('input[name="sexual-check"]').is(':checked')) {
-    		data.sexual = this.state.sexual;
+    		dataSearch.sexual = this.state.sexual;
     	}
-    	
     	if ($('input[name="age-check"]').is(':checked')) {
-    		data.age = this.state.age;
+    		dataSearch.age = this.state.age;
     	}
-
-    	if (data.gender || data.sexual || data.age) {
-    		data.limit = limit;
+    	if (dataSearch.gender || dataSearch.sexual || dataSearch.age) {
+    		dataSearch.limit = limit;
+    		dataSearch.id = UserID;
     		$.ajax({
     			type: 'POST',
         		url: 'http://localhost:8000/search/' + limit,
         		dataType: 'json',
-        		data: data
+        		data: dataSearch,
+        		success: function(response) {
+        			response.forEach((user) => {
+        				if (user.local.email) {
+        					$(`
+        						<div class="user-search-profile">
+	        						<h3> ${user.local.firstName} ${user.local.lastName} </h3>
+	        						<img src="${user.local.avatar}" class="user-search-photo">
+	        						<p> Sexual orientation: ${user.local.sexual}</p>
+	        						<p> About: ${user.local.biography}</p>
+	        						<p> Interests: ${user.local.interests}</p>
+	        						<p>
+	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+	        						</p>
+	        						<button class="btn btn-success btn-view" value="${user._id}">View profile</button>
+        							<hr >
+        						</div>
+        						`).appendTo(".profile-search .profile-view");
+        				} else if (user.facebook.email) {
+        					$(`
+        						<div class="user-search-profile">
+	        						<h3> ${user.facebook.firstName} ${user.facebook.lastName} </h3>
+	        						<img src="${user.facebook.avatar}" class="user-search-photo">
+	        						<p> Sexual orientation: ${user.facebook.sexual}</p>
+	        						<p> About: ${user.facebook.biography}</p>
+	        						<p> Interests: ${user.facebook.interests}</p>
+	        						<p>
+	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+	        						</p>
+	        						<button class="btn btn-success btn-view" value="${user._id}">View profile</button>
+        							<hr >
+        						</div>
+        						`).appendTo(".profile-search .profile-view");
+        				} else {
+        					$(`
+        						<div class="user-search-profile">
+	        						<h3> ${user.google.firstName} ${user.google.lastName} </h3>
+	        						<img src="${user.google.avatar}" class="user-search-photo">
+	        						<p> Sexual orientation: ${user.google.sexual}</p>
+	        						<p> About: ${user.google.biography}</p>
+	        						<p> Interests: ${user.google.interests}</p>
+	        						<p>
+	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+	        						</p>
+	        						<button class="btn btn-success btn-view" value="${user._id}">View profile</button>
+        							<hr >
+        						</div>
+        						`).appendTo(".profile-search .profile-view");
+        				}
+        			});
+        			
+        		}
     		});
     	}
     },
@@ -692,13 +748,8 @@ var ProfileSearch = React.createClass({
 		        			<button className="btn btn-success" onClick={this.handleSearch}>Search</button>
 	        			</div>
     				</div>
-    				<div className="search-users">
-    					
-    					<p id="loading">
-							<i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i>
-						</p>
-    				</div>
         		</div>
+        		<p id="loading"><i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i></p>
         	</div>
 		);		
 	}
