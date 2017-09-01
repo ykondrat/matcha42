@@ -3,7 +3,30 @@ var UserID = User._id;
 var limit = 0;
 var dataSearch = {};
 
+if (User.local.email) {
+	User = User.local;
+} else if (User.facebook.email) {
+	User = User.facebook;
+} else {
+	User = User.google;
+}
+
 $(document).ready(function() {
+	var data = {
+		id: UserID
+	};
+
+	$.ajax({
+		type: 'POST',
+		url: 'http://localhost:8000/get-notification',
+		dataType: 'json',
+		data: data,
+		success: function(response) {
+			if (response.subject) {
+				$('.badge').text(response.subject.length);
+			}
+		}
+	});
 	$(window).scroll(function() {
 		if ($(document).height() - $(window).height() == $(window).scrollTop()) {
 			$('#loading').show();
@@ -23,20 +46,57 @@ $(document).ready(function() {
             $('#loading').hide();
 		}
 	});
+
+	setInterval(() => {
+		var data = {
+			id: UserID
+		};
+
+		$.ajax({
+			type: 'POST',
+			url: 'http://localhost:8000/get-notification',
+			dataType: 'json',
+			data: data,
+			success: function(response) {
+				if (response.subject) {
+					$('.badge').text(response.subject.length);
+				}
+			}
+		});
+	}, 5000);
+
 });
 
-if (User.local.email) {
-	User = User.local;
-} else if (User.facebook.email) {
-	User = User.facebook;
-} else {
-	User = User.google;
-}
+
 
 var ProfileHeader = React.createClass({
 	
 	handleNotification() {
-		console.log('click');	
+		var data = {
+			id: UserID
+		};
+
+		$.ajax({
+			type: 'POST',
+			url: 'http://localhost:8000/get-notification-view',
+			dataType: 'json',
+			data: data,
+			success: function(response) {
+				$(`
+					<div id="modal" class="modal_window">
+						<div class="modal_form">
+						</div>
+					</div>
+				`).appendTo($('#content'));
+				if (response.subject.length < 1) {
+					$(`<p>There is no notification yet</p>`).appendTo($('.modal_form'));
+				} else {
+					response.subject.forEach((item) => {
+						$(`<p>${ item }</p>`).appendTo($('.modal_form'));
+					});
+				}
+			}
+		})
 	},
 
 	handleLogout() {
@@ -55,6 +115,20 @@ var ProfileHeader = React.createClass({
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'none';
+		var coords = {
+			lat: parseFloat(User.latitude),
+			lng: parseFloat(User.longitude)
+		}
+		var map = new google.maps.Map(document.getElementById('map'), {
+	        zoom: 15,
+	        center: coords
+	    });
+
+	    var marker = new google.maps.Marker({
+	        position: coords,
+	        map: map,
+	        title: User.firstName + ' ' +  User.lastName
+	    });
 	},
 	handleModify() {
 		let profile 				= document.querySelector('.profile-main');
@@ -62,7 +136,7 @@ var ProfileHeader = React.createClass({
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
-		
+
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
@@ -76,7 +150,7 @@ var ProfileHeader = React.createClass({
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
-		
+
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'block';
@@ -228,8 +302,8 @@ var ProfileInfo = React.createClass({
 	        		</div>
 	        		<div>
 						<p className="user-rating">Rating: {this.props.user.fameRating}</p>
-						<div className="ldBar" data-preset="energy" data-value= {this.props.user.fameRating} ></div>
 					</div>
+					<div className="ldBar" data-preset="energy" data-value= {this.props.user.fameRating} ></div>
         		</div>
         	</div>    
         );
@@ -354,7 +428,8 @@ var ProfileSettings = React.createClass({
             sexual: this.props.user.sexual || 'heterosexual',
             birthday: this.props.user.birthDate || '',
             interests: this.props.user.interests || '',
-            about: this.props.user.biography || ''
+            about: this.props.user.biography || '',
+            location: ''
         };
     },
 
@@ -377,6 +452,10 @@ var ProfileSettings = React.createClass({
     handleAbout(event) {
     	this.setState({ about: event.target.value });	
     },
+
+    handleLocation(event) {
+    	this.setState({ location: event.target.value });	
+    },
     
     handleSave(event) {
     	$('.error-settings').remove();
@@ -384,7 +463,46 @@ var ProfileSettings = React.createClass({
     	var regexp = /\B#\w*[a-zA-Z0-9]+\w*/;
     	var senderInterest = true;
     	var senderAbout = true;
+    	var address = this.state.location.trim();
+    	var geocoder = new google.maps.Geocoder();
+    	var coords = {
+    		lat: 0,
+	        lng: 0,
+	        city: '',
+		    country: ''
+    	};
 
+    	if (address.length > 1) {
+	    	geocoder.geocode( { 'address': address}, function(results, status) {
+	        	if (status == 'OK') {
+	        		coords = {
+	        			lat: results[0].geometry.location.lat(),
+	        			lng: results[0].geometry.location.lng()
+	        		}
+		            
+		            var map = new google.maps.Map(document.getElementById('map'), {
+				        zoom: 15,
+				        center: coords
+				    });
+
+				    var marker = new google.maps.Marker({
+				        position: coords,
+				        map: map,
+				        title: 'I am here ;)'
+				    });
+				    
+				    $.ajax({
+		    			type: 'GET',
+		    			url: 'http://maps.googleapis.com/maps/api/geocode/json?latlng=' + coords.lat + ',' + coords.lng + '&sensor=true',
+		    			dataType: 'json',
+		    			success: function(result) {
+		    				coords.city = result.results[0].address_components[3].long_name;
+		    				coords.country = result.results[0].address_components[6].long_name;
+		    			}
+	    			});
+				}
+			});
+    	}
     	interests.forEach(interest => {
     		if (regexp.test(interest)) {
     			interest = interest.substring(1);
@@ -408,6 +526,7 @@ var ProfileSettings = React.createClass({
     		$("<p class='error-settings'>Please provide your biography</p>").insertAfter("#settings-header");
     	}
     	if (senderAbout && senderInterest && this.state.birthday != '') {
+
     		var data = {
     			id: UserID,
     			gender: this.state.gender,
@@ -415,6 +534,13 @@ var ProfileSettings = React.createClass({
             	birthday: this.state.birthday,
             	interests: this.state.interests,
             	about: this.state.about
+    		}
+
+    		if (coords.lat) {
+    			data.lat = coords.lat;
+    			data.lng = coords.lng;
+    			data.city = coords.city;
+    			data.country = coords.country;
     		}
 
     		$.ajax({
@@ -429,43 +555,48 @@ var ProfileSettings = React.createClass({
 
 	render() {
         return (
-        	<div className="container profile-settings">
-        		<div className="profile-view">
-        			<h1 id="settings-header">Settings</h1>
-        			<div className="form-settings">
-	        			<div className="form-control">
-		        			<label htmlFor="user-gender">Gender: </label>
-		        			<select name="gender" id="user-gender" onChange={this.handleGender} value={this.state.gender} >
-		        				<option value="male">male</option>
-		        				<option value="female">female</option>
-		        			</select>
+	        	<div className="container profile-settings">
+	        		<div className="profile-view">
+	        			<h1 id="settings-header">Settings</h1>
+	        			<div className="form-settings">
+		        			<div className="form-control">
+			        			<label htmlFor="user-gender">Gender: </label>
+			        			<select name="gender" id="user-gender" onChange={this.handleGender} value={this.state.gender} >
+			        				<option value="male">male</option>
+			        				<option value="female">female</option>
+			        			</select>
+		        			</div>
+		        			<div className="form-control">
+			        			<label htmlFor="user-sexual">Orientation: </label>
+			        			<select name="sexual" id="user-sexual" onChange={this.handleSexual} value={this.state.sexual} >
+			        				<option value="heterosexual">heterosexual</option>
+			        				<option value="homosexual">homosexual</option>
+			        				<option value="bisexual">bisexual</option>
+			        			</select>
+		        			</div>
+		        			<div className="form-control">
+			        			<label htmlFor="user-birthday">Birthday: </label>
+			        			<input type="date" name="birthDate" id="user-birthday" onChange={this.handleBirthday} value={this.state.birthday}/>
+		        			</div>
+		        			<div className="form-control">
+			        			<label htmlFor="user-interests">Interests: </label>
+			        			<textarea name="interests" id="user-interests" placeholder="#sport #javascript" onChange={this.handleInterest} value={this.state.interests}></textarea>
+		        			</div>
+		        			<div className="form-control">
+			        			<label htmlFor="user-biography">About: </label>
+			        			<textarea name="interests" id="user-biography" onChange={this.handleAbout} value={this.state.about}></textarea>
+		        			</div>
+		        			<div className="form-control">
+			        			<label htmlFor="user-location">Location: </label>
+			        			<input type='text' name="location" id="user-location" onChange={this.handleLocation} value={this.state.location}></input>
+		        			</div>
+		        			<div className="form-btn">
+		        				<button className="btn btn-success" onClick={this.handleSave}>Save</button>
+		        			</div>
 	        			</div>
-	        			<div className="form-control">
-		        			<label htmlFor="user-sexual">Orientation: </label>
-		        			<select name="sexual" id="user-sexual" onChange={this.handleSexual} value={this.state.sexual} >
-		        				<option value="heterosexual">heterosexual</option>
-		        				<option value="homosexual">homosexual</option>
-		        				<option value="bisexual">bisexual</option>
-		        			</select>
-	        			</div>
-	        			<div className="form-control">
-		        			<label htmlFor="user-birthday">Birthday: </label>
-		        			<input type="date" name="birthDate" id="user-birthday" onChange={this.handleBirthday} value={this.state.birthday}/>
-	        			</div>
-	        			<div className="form-control">
-		        			<label htmlFor="user-interests">Interests: </label>
-		        			<textarea name="interests" id="user-interests" placeholder="#sport #javascript" onChange={this.handleInterest} value={this.state.interests}></textarea>
-	        			</div>
-	        			<div className="form-control">
-		        			<label htmlFor="user-biography">About: </label>
-		        			<textarea name="interests" id="user-biography" onChange={this.handleAbout} value={this.state.about}></textarea>
-	        			</div>
-	        			<div className="form-btn">
-	        				<button className="btn btn-success" onClick={this.handleSave}>Save</button>
-	        			</div>
-        			</div>
-        		</div>
-        	</div>    
+	        		</div>
+	        		<div id='map'></div> 
+	        	</div>	 
         );
     }
 });
@@ -628,6 +759,18 @@ var ProfileSearch = React.createClass({
     },
 
     handleAge(event) {
+    	var from_age = parseInt(event.target.value) - 2;
+    	var to_age = parseInt(event.target.value) + 2;
+
+    	if (event.target.value <= 5) {
+    		from_age = 5;
+			to_age = 7;    		
+    	}
+    	if (event.target.value > 95) {
+    		to_age = 100;
+    	}
+    	$('.span-from').text(from_age);
+    	$('.span-to').text(to_age);
     	this.setState({ age: event.target.value });
     },
 
@@ -661,14 +804,13 @@ var ProfileSearch = React.createClass({
         						<div class="user-search-profile">
 	        						<h3> ${user.local.firstName} ${user.local.lastName} </h3>
 	        						<img src="${user.local.avatar}" class="user-search-photo">
-	        						<p> Sexual orientation: ${user.local.sexual}</p>
-	        						<p> About: ${user.local.biography}</p>
-	        						<p> Interests: ${user.local.interests}</p>
 	        						<p>
 	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
 										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
 	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}">View profile</button>
+	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
         							<hr >
         						</div>
         						`).appendTo(".profile-search .profile-view");
@@ -677,14 +819,13 @@ var ProfileSearch = React.createClass({
         						<div class="user-search-profile">
 	        						<h3> ${user.facebook.firstName} ${user.facebook.lastName} </h3>
 	        						<img src="${user.facebook.avatar}" class="user-search-photo">
-	        						<p> Sexual orientation: ${user.facebook.sexual}</p>
-	        						<p> About: ${user.facebook.biography}</p>
-	        						<p> Interests: ${user.facebook.interests}</p>
 	        						<p>
 	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
 										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
 	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}">View profile</button>
+	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
         							<hr >
         						</div>
         						`).appendTo(".profile-search .profile-view");
@@ -693,14 +834,13 @@ var ProfileSearch = React.createClass({
         						<div class="user-search-profile">
 	        						<h3> ${user.google.firstName} ${user.google.lastName} </h3>
 	        						<img src="${user.google.avatar}" class="user-search-photo">
-	        						<p> Sexual orientation: ${user.google.sexual}</p>
-	        						<p> About: ${user.google.biography}</p>
-	        						<p> Interests: ${user.google.interests}</p>
 	        						<p>
 	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
 										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
 	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}">View profile</button>
+	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
         							<hr >
         						</div>
         						`).appendTo(".profile-search .profile-view");
@@ -725,7 +865,6 @@ var ProfileSearch = React.createClass({
 		        				<option value="male">male</option>
 		        				<option value="female">female</option>
 		        			</select>
-		        			
 	        			</div>
 	        			
 	        			<div className="form-control">
@@ -737,13 +876,42 @@ var ProfileSearch = React.createClass({
 		        			</select>
 		        			
 	        			</div>
-
 	        			<div className="form-control">
 		        			<label htmlFor="user-age-search"><input type="checkbox" name="age-check" />Age: </label>
-		        			<input type="number" name="age" id="user-age-search" value={this.state.age} onChange={this.handleAge}/>
-
+		        			<input type="range" list="tickmarks" name="age" id="user-age-search" value={this.state.age} onChange={this.handleAge} />
+							<datalist id="tickmarks">
+								<option value="0"/>
+								<option value="10"/>
+								<option value="20"/>
+								<option value="30"/>
+								<option value="40"/>
+								<option value="50"/>
+								<option value="60"/>
+								<option value="70"/>
+								<option value="80"/>
+								<option value="90"/>
+								<option value="100"/>
+							</datalist>
+							<p>From: <span className="span-from">16</span> to: <span className="span-to">20</span></p>
 	        			</div>
-
+	        			<div className="form-control">
+		        			<label htmlFor="user-rating-search"><input type="checkbox" name="rating-check" />Rating: </label>
+		        			<input type="range" list="tickmarks" name="rating" id="user-rating-search" value={this.state.rating} onChange={this.handleRating} />
+							<datalist id="tickmarks">
+								<option value="0"/>
+								<option value="10"/>
+								<option value="20"/>
+								<option value="30"/>
+								<option value="40"/>
+								<option value="50"/>
+								<option value="60"/>
+								<option value="70"/>
+								<option value="80"/>
+								<option value="90"/>
+								<option value="100"/>
+							</datalist>
+							<p>From: <span className="span-from">16</span> to: <span className="span-to">20</span></p>
+	        			</div>
 	        			<div className="form-btn">
 		        			<button className="btn btn-success" onClick={this.handleSearch}>Search</button>
 	        			</div>

@@ -1,5 +1,8 @@
 var User            = require('./models/user');
 var Location        = require('./models/location');
+var Notification    = require('./models/notification');
+var Report          = require('./models/report');
+var Connection      = require('./models/connection');
 const fs            = require('fs');
 const nodemailer    = require('nodemailer');
 
@@ -24,7 +27,6 @@ module.exports = (app, passport, uploads) => {
     
     // Search route
     app.post('/search/:id', isLoggedOn, (req, res) => {
-        console.log(req.body);
         User.find({}, (err, data) => {
             data = data.filter(item => item._id != req.body.id);
 
@@ -109,8 +111,205 @@ module.exports = (app, passport, uploads) => {
                 });
             }
 
+            if (user.local.email) {
+                user.local.blockedUser.forEach((userID) => {
+                    data = data.filter(item => item._id != userID);                
+                });
+            } else if (user.facebook.email) {
+                user.facebook.blockedUser.forEach((userID) => {
+                    data = data.filter(item => item._id != userID);                
+                });
+            } else {
+                user.google.blockedUser.forEach((userID) => {
+                    data = data.filter(item => item._id != userID);                
+                });
+            }
+
+
             var sendData = data.slice(req.params.id, req.params.id + 5);
             res.send(sendData);
+        });
+    });
+
+    app.post('/get-user-profile', isLoggedOn, (req, res) => {
+        User.findById(req.body.id, function (err, user){
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                res.send(user);
+            }
+        });
+    });
+
+    app.post('/notification-view', (req, res) => {
+        Notification.findOne({ 'to': req.body.id }, (err, notification) => {
+                if (err) {
+                    throw err;
+                }
+                if (notification) {
+                    notification.subject.push('Your profile was viewed');
+ 
+                    notification.save(function (err) {
+                        if (err)
+                            throw err;
+                        res.sendStatus(200);
+                    });
+                } else {
+                    var newNotification = new Notification();
+                    newNotification.from = req.body.from;
+                    newNotification.to = req.body.id;
+                    newNotification.subject = 'Your profile was viewed';
+
+                     
+                    newNotification.save(function(err) {
+                        if (err)
+                           throw err;
+                        res.sendStatus(200);
+                    });
+                }
+        });
+    });
+
+    app.post('/notification-like', (req, res) => {
+        Notification.findOne({ 'to': req.body.whom }, (err, notification) => {
+                if (err) {
+                    throw err;
+                }
+                if (notification) {
+                    notification.subject.push('Some body like you');
+ 
+                    notification.save(function (err) {
+                        if (err)
+                            throw err;
+                        res.sendStatus(200);
+                    });
+                } else {
+                    var newNotification = new Notification();
+                    newNotification.from = req.body.who;
+                    newNotification.to = req.body.whom;
+                    newNotification.subject = 'Some body like you';
+
+                     
+                    newNotification.save(function(err) {
+                        if (err)
+                           throw err;
+                        res.sendStatus(200);
+                    });
+                }
+        });
+    });
+
+    app.post('/notification-dislike', (req, res) => {
+        Notification.findOne({ 'to': req.body.whom }, (err, notification) => {
+            if (err) {
+                throw err;
+            }
+            if (notification) {
+                notification.subject.push('Some body dislike you');
+
+                notification.save(function (err) {
+                    if (err)
+                        throw err;
+                    res.sendStatus(200);
+                });
+            } else {
+                var newNotification = new Notification();
+                newNotification.from = req.body.who;
+                newNotification.to = req.body.whom;
+                newNotification.subject = 'Some body dislike you';
+
+                 
+                newNotification.save(function(err) {
+                    if (err)
+                       throw err;
+                    res.sendStatus(200);
+                });
+            }
+        });
+    });
+
+    app.post('/block-user', (req, res) => {
+        User.findById(req.body.who, (err, user) => {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                if (user.local.email) {
+                    if (!user.local.blockedUser.includes(req.body.whom))
+                        user.local.blockedUser.push();
+                } else if (user.facebook.email) {
+                    if (!user.facebook.blockedUser.includes(req.body.whom))
+                        user.facebook.blockedUser.push();
+                } else {
+                    if (!user.google.blockedUser.includes(req.body.whom))
+                        user.google.blockedUser.push();
+                }
+
+                user.save((err, updatedUser) => {
+                    if (err) {
+                        throw err;
+                    }
+                    if (updatedUser) {
+                        res.sendStatus(200);
+                    }
+                });
+            }
+        });
+    });
+
+    app.post('/report-user', (req, res) => {
+        User.findById(req.body.who, (err, user) => {
+            if (err) {
+                throw err;
+            }
+            if (user) {
+                if (user.local.email) {
+                    if (!user.local.blockedUser.includes(req.body.whom))
+                        user.local.blockedUser.push();
+                } else if (user.facebook.email) {
+                    if (!user.facebook.blockedUser.includes(req.body.whom))
+                        user.facebook.blockedUser.push();
+                } else {
+                    if (!user.google.blockedUser.includes(req.body.whom))
+                        user.google.blockedUser.push();
+                }
+
+                user.save((err, updatedUser) => {
+                    if (err) {
+                        throw err;
+                    }
+                    if (updatedUser) {
+                        var newReport = new Report();
+                        newReport.user_id = req.body.whom;
+                         
+                        newReport.save(function(err) {
+                            if (err)
+                               throw err;
+                            res.sendStatus(200);
+                        });
+                    }
+                });
+            }
+        });    
+    });
+
+    app.post('/get-notification', (req, res) => {
+        Notification.findOne({'to': req.body.id}, (err, data) => {
+            res.send(data);
+        });
+    });
+
+    app.post('/get-notification-view', (req, res) => {
+        Notification.findOne({'to': req.body.id}, (err, data) => {
+            var sender = JSON.parse(JSON.stringify(data));
+            data.subject = [];
+
+            data.save(function(err) {
+                if (err)
+                   throw err;
+                res.send(sender);
+            });
         });
     });
 
@@ -311,7 +510,7 @@ module.exports = (app, passport, uploads) => {
             }
             if (user) {
                 if (user.local.email) {
-                    if (!user.local.birthDate) {
+                    if (!user.local.birthDate && !user.local.biography && !user.local.interests && !user.local.sexual) {
                         user.local.fameRating += 20;
                     }
                     user.local.gender = req.body.gender;
@@ -319,12 +518,17 @@ module.exports = (app, passport, uploads) => {
                     user.local.birthDate = req.body.birthday;
                     user.local.interests = req.body.interests;
                     user.local.biography = req.body.about;
-
+                    if (req.body.lat) {
+                        user.local.latitude = req.body.lat;
+                        user.local.longitude = req.body.lng;
+                        user.local.city = req.body.city;
+                        user.local.country = req.body.country;
+                    }
                     if (user.local.avatar != 'https://www.worldskills.org/components/angular-worldskills-utils/images/user.png') {
                         user.local.active = 1;
                     }
                 } else if (user.facebook.email) {
-                    if (!user.facebook.birthDate) {
+                    if (!user.facebook.birthDate && !user.facebook.biography && !user.facebook.interests && !user.facebook.sexual) {
                         user.facebook.fameRating += 20;
                     }
                     user.facebook.gender = req.body.gender;
@@ -332,12 +536,18 @@ module.exports = (app, passport, uploads) => {
                     user.facebook.birthDate = req.body.birthday;
                     user.facebook.interests = req.body.interests;
                     user.facebook.biography = req.body.about;
+                    if (req.body.lat) {
+                        user.facebook.latitude = req.body.lat;
+                        user.facebook.longitude = req.body.lng;
+                        user.facebook.city = req.body.city;
+                        user.facebook.country = req.body.country;    
+                    }
                     
                     if (user.facebook.avatar != '') {
                         user.facebook.active = 1;
                     }
                 } else {
-                    if (!user.google.birthDate) {
+                    if (!user.google.birthDate && !user.google.biography && !user.google.interests && !user.google.sexual) {
                         user.google.fameRating += 20;
                     }
                     user.google.gender = req.body.gender;
@@ -345,6 +555,10 @@ module.exports = (app, passport, uploads) => {
                     user.google.birthDate = req.body.birthday;
                     user.google.interests = req.body.interests;
                     user.google.biography = req.body.about;
+                    user.google.latitude = req.body.lat;
+                    user.google.longitude = req.body.lng;
+                    user.google.city = req.body.city;
+                    user.google.country = req.body.country;
                     
                     if (user.google.avatar != '') {
                         user.google.active = 1;
@@ -553,7 +767,7 @@ module.exports = (app, passport, uploads) => {
         });
     });
 
-    // Set likes
+    // Set likes and connection
     app.post('/set-likes', (req, res) => {
         User.findById(req.body.who, function (err, user) {
             if (err) {
@@ -563,21 +777,45 @@ module.exports = (app, passport, uploads) => {
                 var saver = false;
 
                 if (user.local.email) {
-                    if (!user.local.likedUser.includes(req.body.whom) && !user.local.dislikedUser.includes(req.body.whom)){
+                    if (user.local.dislikedUser.includes(req.body.whom)) {
+                        var index = user.local.dislikedUser.indexOf(req.body.whom);
+                        if (index > -1) {
+                            user.local.dislikedUser.splice(index, 1);
+                        }
+                    }
+                    if (!user.local.likedUser.includes(req.body.whom)) {
                         user.local.likedUser.push(req.body.whom);
                         saver = true;
                     }
                 } else if (user.facebook.email) {
-                    if (!user.facebook.likedUser.includes(req.body.whom) && !user.facebook.dislikedUser.includes(req.body.whom)){
+                    if (user.facebook.dislikedUser.includes(req.body.whom)) {
+                        var index = user.facebook.dislikedUser.indexOf(req.body.whom);
+                        if (index > -1) {
+                            user.facebook.dislikedUser.splice(index, 1);
+                        }
+                    }
+                    if (!user.facebook.likedUser.includes(req.body.whom)) {
                         user.facebook.likedUser.push(req.body.whom);
                         saver = true;
                     }
                 } else {
-                    if (!user.google.likedUser.includes(req.body.whom) && !user.google.dislikedUser.includes(req.body.whom)){
+                    if (user.google.dislikedUser.includes(req.body.whom)) {
+                        var index = user.google.dislikedUser.indexOf(req.body.whom);
+                        if (index > -1) {
+                            user.google.dislikedUser.splice(index, 1);
+                        }
+                    }
+                    if (!user.google.likedUser.includes(req.body.whom)) {
                         user.google.likedUser.push(req.body.whom);
                         saver = true;
                     }
                 }
+                if (user.local.avatar == '' ||
+                    user.local.avatar == 'https://www.worldskills.org/components/angular-worldskills-utils/images/user.png' ||
+                    user.facebook.avatar == '' ||
+                    user.google.avatar == '') {
+                    saver = false;
+                } 
 
                 if (saver) {
                     user.save(function(err, updatedUser){
@@ -591,10 +829,73 @@ module.exports = (app, passport, uploads) => {
                                 if (user) {
                                     if (user.local.email) {
                                         user.local.fameRating += 10;
+                                        if (user.local.likedUser.includes(req.body.who)) {
+                                            var newConnection = new Connection();
+                                            newConnection.first = req.body.who;
+                                            newConnection.second = req.body.whom;
+
+                                            newLocation.save(function(err, connect) {
+                                                if (err)
+                                                   throw err;
+                                                if (connect) {
+                                                    var newNotification = new Notification();
+                                                    newNotification.from = req.body.who;
+                                                    newNotification.to = req.body.whom;
+                                                    newNotification.subject = 'You have a new connection';
+                                                     
+                                                    newNotification.save(function(err) {
+                                                        if (err)
+                                                           throw err;
+                                                    });
+                                                }
+                                            });
+                                        }
                                     } else if (user.facebook.email) {
                                         user.facebook.fameRating += 10;
+                                        if (user.facebook.likedUser.includes(req.body.who)) {
+                                            var newConnection = new Connection();
+                                            newConnection.first = req.body.who;
+                                            newConnection.second = req.body.whom;
+
+                                            newLocation.save(function(err, connect) {
+                                                if (err)
+                                                   throw err;
+                                                if (connect) {
+                                                    var newNotification = new Notification();
+                                                    newNotification.from = req.body.who;
+                                                    newNotification.to = req.body.whom;
+                                                    newNotification.subject = 'You have a new connection';
+                                                     
+                                                    newNotification.save(function(err) {
+                                                        if (err)
+                                                           throw err;
+                                                    });
+                                                }
+                                            });
+                                        }
                                     } else {
                                         user.google.fameRating += 10;
+                                        if (user.google.likedUser.includes(req.body.who)) {
+                                            var newConnection = new Connection();
+                                            newConnection.first = req.body.who;
+                                            newConnection.second = req.body.whom;
+
+                                            newLocation.save(function(err, connect) {
+                                                if (err)
+                                                   throw err;
+                                                if (connect) {
+                                                    var newNotification = new Notification();
+                                                    newNotification.from = req.body.who;
+                                                    newNotification.to = req.body.whom;
+                                                    newNotification.subject = 'You have a new connection';
+                                                     
+                                                    newNotification.save(function(err) {
+                                                        if (err)
+                                                           throw err;
+                                                    });
+                                                }
+                                            });
+                                        }
                                     }                                
                                 }
 
@@ -602,7 +903,7 @@ module.exports = (app, passport, uploads) => {
                                     if (err)
                                         throw err;
                                     if (updatedUser) {
-                                        res.sendStatus(200);
+                                        res.send({msg: 'SET'});
                                     }
                                 });
                             });
@@ -624,23 +925,57 @@ module.exports = (app, passport, uploads) => {
                 var saver = false;
 
                 if (user.local.email) {
-                    if (!user.local.likedUser.includes(req.body.whom) && !user.local.dislikedUser.includes(req.body.whom)){
+                    if (user.local.likedUser.includes(req.body.whom)) {
+                        var index = user.local.likedUser.indexOf(req.body.whom);
+                        if (index > -1) {
+                            user.local.likedUser.splice(index, 1);
+                        }
+                    }
+                    if (!user.local.dislikedUser.includes(req.body.whom)) {
                         user.local.dislikedUser.push(req.body.whom);
                         saver = true;
                     }
                 } else if (user.facebook.email) {
-                    if (!user.facebook.likedUser.includes(req.body.whom) && !user.facebook.dislikedUser.includes(req.body.whom)){
+                    if (user.facebook.likedUser.includes(req.body.whom)) {
+                        var index = user.facebook.likedUser.indexOf(req.body.whom);
+                        if (index > -1) {
+                            user.facebook.likedUser.splice(index, 1);
+                        }
+                    }
+                    if (!user.facebook.dislikedUser.includes(req.body.whom)) {
                         user.facebook.dislikedUser.push(req.body.whom);
                         saver = true;
-                    }
+
+                    }   
                 } else {
-                    if (!user.google.likedUser.includes(req.body.whom) && !user.google.dislikedUser.includes(req.body.whom)){
+                    if (user.google.likedUser.includes(req.body.whom)) {
+                        var index = user.google.likedUser.indexOf(req.body.whom);
+                        if (index > -1) {
+                            user.google.likedUser.splice(index, 1);
+                        }
+                    }
+                    if (!user.google.dislikedUser.includes(req.body.whom)) {
                         user.google.dislikedUser.push(req.body.whom);
                         saver = true;
-                    }
+                    }    
                 }
+                if (user.local.avatar == '' ||
+                    user.local.avatar == 'https://www.worldskills.org/components/angular-worldskills-utils/images/user.png' ||
+                    user.facebook.avatar == '' ||
+                    user.google.avatar == '') {
+                    saver = false;
+                } 
 
                 if (saver) {
+                    Connection.remove( { $or:[ { first: req.body.whom, second: req.body.who }, {first: req.body.who, second: req.body.whom} ]} , (err, removed) => {
+                        if (err) {
+                            throw err;
+                        }
+                        if (removed) {
+                            console.log(removed);
+                        }
+                    });
+
                     user.save(function(err, updatedUser){
                         if (err)
                             throw err;
@@ -663,7 +998,7 @@ module.exports = (app, passport, uploads) => {
                                     if (err)
                                         throw err;
                                     if (updatedUser) {
-                                        res.sendStatus(200);
+                                        res.send({msg: 'SET'});
                                     }
                                 });
                             });

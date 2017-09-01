@@ -1,0 +1,21 @@
+$multiRangeHeight: 2em;
+input[type="range"][multiple]
+    display: block
+    height: $multiRangeHeight   
+    margin: 0
+    pointer-events: none
+
+    & + input[type="range"][multiple]
+        margin-top: $multiRangeHeight * -1
+
+@mixin multirange-thumb
+    pointer-events: all
+
+input[type="range"]::-webkit-slider-thumb
+    @include multirange-thumb
+
+input[type="range"]::-moz-range-thumb
+    @include multirange-thumb
+
+input[type="range"]::-ms-thumb
+    @include multirange-thumb

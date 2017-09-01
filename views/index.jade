@@ -4,7 +4,7 @@ block content
     div.panels
         div.panel.panel1
             p
-                a(href="/auth/facebook" class="btn btn-primary" onclick="sendLocationFB()") Continue with <i class="fa fa-facebook-square" aria-hidden="true"></i>
+                a(href="/auth/facebook" class="btn btn-primary") Continue with <i class="fa fa-facebook-square" aria-hidden="true"></i>
             p 
                 i.fa.fa-facebook-square.fa-2x(aria-hidden="true")
             p facebook.com <i class="fa fa-facebook-square" aria-hidden="true"></i>
@@ -18,24 +18,24 @@ block content
                     br
                     input.btn.btn-success(type="submit", value="SignIn")
                     br
-                    p(class="forgot-passord", data-toggle="modal", data-target="#forgot-modal") Forgot password?
+                    p.forgot-passord(data-toggle="modal", data-target="#forgot-modal") Forgot password?
                 
-                div(class="modal fade", id="forgot-modal", tabindex="-1", role="dialog", aria-labelledby="ModalLabel",aria-hidden="true")
-                    div(class="modal-dialog", role="document")
-                        div(class="modal-content")
-                            div(class="modal-header")
-                                h5(class="modal-title", id="ModalLabel") Forgot password
-                                button(type="button", class="close", data-dismiss="modal", aria-label="Close")
+                div.modal.fade(id="forgot-modal", tabindex="-1", role="dialog", aria-labelledby="ModalLabel",aria-hidden="true")
+                    .modal-dialog(role="document")
+                        .modal-content
+                            .modal-header
+                                h5.modal-title (id="ModalLabel") Forgot password
+                                button.close(type="button", data-dismiss="modal", aria-label="Close")
                                     span(aria-hidden="true") &times;
-                            div(class="modal-body")
+                            .modal-body
                                 input(type="email", name="forgot-email", placeholder="email", id="forgot-email")
-                            div(class="modal-footer")
-                                button(type="button", class="btn btn-danger", data-dismiss="modal") Close
-                                button(type="button", class="btn btn-success", onclick="sendEmail()") Send
+                            .modal-footer
+                                button.btn.btn-danger(type="button", data-dismiss="modal") Close
+                                button.btn.btn-success(type="button", onclick="sendEmail()") Send
             p Sign In
             p ykondrat &copy; 2017
-        div.panel.panel3
-            div.signup
+        .panel.panel3
+            .signup
                 form(method="POST", action="/signup", onsubmit="return (validForm())")
                     p.error-msg-signup= message
                     input#nameSignup(type="text", name="firstName", placeholder="First name")
@@ -51,7 +51,9 @@ block content
             p ykondrat &copy; 2017
         div.panel.panel4
             p
-                a(href="/auth/google" class="btn btn-danger") Continue with <i class="fa fa-google-plus-square" aria-hidden="true"></i>
+                a(href="/auth/google" class="btn btn-danger") Continue with 
+                    i.fa.fa-google-plus-square(aria-hidden="true")
             p 
                 i.fa.fa-google-plus-square.fa-2x(aria-hidden="true")
-            p plus.google.com <i class="fa fa-google-plus-square" aria-hidden="true"></i>
+            p plus.google.com 
+                i.fa.fa-google-plus-square(aria-hidden="true")
