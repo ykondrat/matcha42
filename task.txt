@@ -41,12 +41,12 @@
 		- The list must be filterable by age, localization, “fame rating” and common tags.
 
 4. Research
-	+/- The user must be able to run an advanced research selecting one or a few criterias such
+	+ The user must be able to run an advanced research selecting one or a few criterias such
 		as:
-		+/- A age gap.
-		- A “fame rating” gap.
-		- A location.
-		- One or multiple interests tags.
+		+ A age gap.
+		+ A “fame rating” gap.
+		+ A location.
+		+ One or multiple interests tags.
 	- As per the suggestion list, the resulting list must be sortable and filterable by age,
 	location, “fame rating” and tags.
 
@@ -87,6 +87,7 @@
 	+ Import pictures from Facebook and/or Google+.
 	- Create an interactive map of the users (which implies a more precise GPS localization
 	  via JavaScript).
+	+ Infinit pagination
 
 
 
@@ -116,7 +117,9 @@ function sortUserGeo(userA, userB) {
 }
 
 
-
+pagination
+search location
+block report search(bug )
 
 
 

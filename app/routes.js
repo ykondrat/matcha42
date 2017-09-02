@@ -1,18 +1,8 @@
 var User            = require('./models/user');
-var Location        = require('./models/location');
 var Notification    = require('./models/notification');
 var Report          = require('./models/report');
 var Connection      = require('./models/connection');
 const fs            = require('fs');
-const nodemailer    = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'kondratyev.yevhen@gmail.com',
-        pass: ''
-    }
-});
 
 module.exports = (app, passport, uploads) => {
     // Main route of site
@@ -73,7 +63,7 @@ module.exports = (app, passport, uploads) => {
                         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                             age--;
                         }
-                        if (age == parseInt(req.body.age)) {
+                        if (age >= parseInt(req.body.age) - 2 && age <= parseInt(req.body.age) + 2) {
                             return (true);
                         } else {
                             return (false);
@@ -87,7 +77,7 @@ module.exports = (app, passport, uploads) => {
                         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                             age--;
                         }
-                        if (age == parseInt(req.body.age)) {
+                        if (age >= parseInt(req.body.age) - 2 && age <= parseInt(req.body.age) + 2) {
                             return (true);
                         } else {
                             return (false);
@@ -101,7 +91,7 @@ module.exports = (app, passport, uploads) => {
                         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                             age--;
                         }
-                        if (age == parseInt(req.body.age)) {
+                        if (age >= parseInt(req.body.age) - 2 && age <= parseInt(req.body.age) + 2) {
                             return (true);
                         } else {
                             return (false);
@@ -110,24 +100,124 @@ module.exports = (app, passport, uploads) => {
                     return (false);
                 });
             }
+            if (req.body.rating) {
+                data = data.filter((user) => {
+                    if (user.local.fameRating) {
+                        if (user.local.fameRating >= parseInt(req.body.rating) - 10 && user.local.fameRating <= parseInt(req.body.rating) + 10) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else if (user.facebook.fameRating) {
+                        if (user.facebook.fameRating >= parseInt(req.body.rating) - 10 && user.facebook.fameRating <= parseInt(req.body.rating) + 10) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else {
+                        if (user.google.fameRating >= parseInt(req.body.rating) - 10 && user.google.fameRating <= parseInt(req.body.rating) + 10) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    }
+                });
+            }
+            if (req.body.location) {
+                data = data.filter((user) => {
+                    if (user.local.city || user.local.country) {
+                        if (user.local.city == req.body.location || user.local.country == req.body.location) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else if (user.facebook.city || user.facebook.country) {
+                        if (user.facebook.city == req.body.location || user.facebook.country == req.body.location) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else {
+                        if (user.google.city == req.body.location || user.google.country == req.body.location) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    }
+                });
+            }
+            if (req.body.tags) {
+                var tags = req.body.tags.split(' ');
+                data = data.filter((user) => {
+                    if (user.local.interests) {
+                        var interests = user.local.interests.split(' ');
+                        var match = tags.length;
 
-            if (user.local.email) {
-                user.local.blockedUser.forEach((userID) => {
-                    data = data.filter(item => item._id != userID);                
-                });
-            } else if (user.facebook.email) {
-                user.facebook.blockedUser.forEach((userID) => {
-                    data = data.filter(item => item._id != userID);                
-                });
-            } else {
-                user.google.blockedUser.forEach((userID) => {
-                    data = data.filter(item => item._id != userID);                
+                        tags.forEach((item) => {
+                            if (interests.includes(item)) {
+                                match--;
+                            }
+                        })
+                        if (match == 0) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else if (user.facebook.interests) {
+                        var interests = user.facebook.interests.split(' ');
+                        var match = tags.length;
+
+                        tags.forEach((item) => {
+                            if (interests.includes(item)) {
+                                match--;
+                            }
+                        })
+                        if (match == 0) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    } else {
+                        var interests = user.google.interests.split(' ');
+                        var match = tags.length;
+
+                        tags.forEach((item) => {
+                            if (interests.includes(item)) {
+                                match--;
+                            }
+                        })
+                        if (match == 0) {
+                            return (true);
+                        } else {
+                            return (false);
+                        }
+                    }
                 });
             }
 
+            User.findById(req.body.id, (err, user) => {
+                if (err) {
+                    throw err;
+                }
+                if (user) {
+                    if (user.local.email) {
+                        user.local.blockedUser.forEach((itemId) => {
+                            data = data.filter(item => item._id != itemId);
+                        });
+                    } else if (user.facebook.email) {
+                        user.facebook.blockedUser.forEach((itemId) => {
+                            data = data.filter(item => item._id != itemId);
+                        });
+                    } else {
+                        user.google.blockedUser.forEach((itemId) => {
+                            data = data.filter(item => item._id != itemId);
+                        });
+                    }
 
-            var sendData = data.slice(req.params.id, req.params.id + 5);
-            res.send(sendData);
+                    var sendData = data.slice(req.params.id, req.params.id + 5);
+                    res.send(sendData);
+                }
+            });
         });
     });
 
@@ -313,195 +403,6 @@ module.exports = (app, passport, uploads) => {
         });
     });
 
-    // Logout from site
-    app.get('/logout', (req, res) => {
-        req.logout();
-        res.redirect('/');
-    });
-    
-    // Forgot password
-    app.post('/forgot-password', (req, res) => {
-        User.findOne({ 'local.email': req.body.email }, (err, user) => {
-            if (err) {
-                throw err;
-            }
-            if (user) {
-                var length = 16;
-                var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-                var newPassword = "";
-                
-                for (var i = 0, n = charset.length; i < length; ++i) {
-                    newPassword += charset.charAt(Math.floor(Math.random() * n));
-                }
-                var newUser = new User;
-                user.local.password = newUser.generateHash(newPassword);
-
-                var mailOptions = {
-                    from: 'kondratyev.yevhen@gmail.com',
-                    to: user.local.email,
-                    subject: 'New Password in Matcha',
-                    html: `
-                            <div style="width: 100%;
-                                    height: 100%;
-                                    background: url(http://localhost:8000/images/matcha.jpg) 100% 100% no-repeat;
-                                    background-size: cover">
-                                <h1 style="margin: 0 10px 0 10px;
-                                    padding: 7px;
-                                    font-size: 6vmin;
-                                    font-weight: bold;">Your new password to <span style="color: #70E97A;
-                                    text-shadow: 2px 2px #000;">matcha</span></h1>
-                                <h3 style="margin: 0 10px 0 10px;
-                                    padding: 7px;
-                                    font-size: 4vmin;">Password: ${newPassword}</h3>
-                                <a href="http://localhost:8000" style="font-size: 4vmin;
-                                    margin: 0 10px 0 10px;
-                                    padding: 7px;
-                                    background-color: #70E97A;
-                                    color: white;
-                                    font-weight: bold;
-                                    border-radius: 4px; 
-                                    text-decoration: none;  ">Go to matcha</a>
-                                <p style="margin: 0 10px 0 10px;
-                                    padding: 7px;
-                                    font-size: 3vmin;">ykondrat &copy; 2017</p>
-                            </div>`
-                };
-
-                transporter.sendMail(mailOptions, function(error, info){
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        console.log('Email sent: ' + info.response);
-                    }
-                });
-
-                user.save(function(err, updatedUser){
-                    if (err)
-                        throw err;
-                    if (updatedUser) {
-                        res.send({msg: 'Password was sent on your mail'});
-                    }
-                });
-            } else {
-                res.send({msg: 'No such email locally registered'});
-            }
-        });
-    });
-
-    // Sigin with passport.js
-    app.post('/signin', passport.authenticate('local-signin', {
-        successRedirect: '/profile',
-        failureRedirect: '/',
-        failureFlash: true
-    }));
-    
-    // Signup with passport.js
-    app.post('/signup', passport.authenticate('local-signup', {
-        successRedirect: '/profile',
-        failureRedirect: '/',
-        failureFlash: true
-    }));
-    
-    // Facebook routes
-    app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
-	app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/'  }), (req, res) => {
-        User.findById(req.user._id, function (err, user) {
-            if (err) {
-                throw err;
-            }
-            if (user) {
-                Location.findOne({ 'sessionId': req.sessionID }, (err, location) => {
-                    if (err) {
-                        throw err;
-                    }
-                    if (location) {
-                        user.facebook.country = location.country; 
-                        user.facebook.city = location.city;
-                        user.facebook.latitude = location.latitude;
-                        user.facebook.longitude = location.longitude;
-
-                        user.save(function(err, updatedUser){
-                            if (err)
-                                throw err;
-                            if (updatedUser) {
-                                req.user = updatedUser;
-                                res.redirect('/profile');            
-                            }
-                        });
-                    }
-                });
-            } 
-        });
-    });
-
-    // Google+ routes
-    app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-	app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => {
-        User.findById(req.user._id, function (err, user) {
-            if (err) {
-                throw err;
-            }
-            if (user) {
-                Location.findOne({ 'sessionId': req.sessionID }, (err, location) => {
-                    if (err) {
-                        throw err;
-                    }
-                    if (location) {
-                        user.google.country = location.country; 
-                        user.google.city = location.city;
-                        user.google.latitude = location.latitude;
-                        user.google.longitude = location.longitude;
-
-                        user.save(function(err, updatedUser){
-                            if (err)
-                                throw err;
-                            if (updatedUser) {
-                                req.user = updatedUser;
-                                res.redirect('/profile');            
-                            }
-                        });
-                    }
-                });
-            } 
-        });
-    });
-    
-    // Set geolocation of user
-    app.post('/geolocation', (req, res) => {
-        process.nextTick(() => { 
-            Location.findOne({ 'sessionId': req.sessionID }, (err, location) => {
-                if (err) {
-                    throw err;
-                }
-                if (location) {
-                    location.country = req.body.country;
-                    location.city = req.body.city;
-                    location.latitude = req.body.latitude;
-                    location.longitude = req.body.longitude;
-
-                    location.save(function (err) {
-                        if (err)
-                            throw err;
-                        res.sendStatus(200);
-                    });
-                } else {
-                    var newLocation = new Location();
-                    newLocation.sessionId = req.sessionID;
-                    newLocation.country = req.body.country;
-                    newLocation.city = req.body.city;
-                    newLocation.latitude = req.body.latitude;
-                    newLocation.longitude = req.body.longitude;
-                     
-                    newLocation.save(function(err) {
-                        if (err)
-                           throw err;
-                        res.sendStatus(200);
-                    });
-                }
-            });
-        });
-    });
-
     // Set main user info
     app.post('/user-info', (req, res) => {
         User.findById(req.body.id, function (err, user) {
@@ -510,7 +411,7 @@ module.exports = (app, passport, uploads) => {
             }
             if (user) {
                 if (user.local.email) {
-                    if (!user.local.birthDate && !user.local.biography && !user.local.interests && !user.local.sexual) {
+                    if (!user.local.birthDate) {
                         user.local.fameRating += 20;
                     }
                     user.local.gender = req.body.gender;
@@ -528,7 +429,7 @@ module.exports = (app, passport, uploads) => {
                         user.local.active = 1;
                     }
                 } else if (user.facebook.email) {
-                    if (!user.facebook.birthDate && !user.facebook.biography && !user.facebook.interests && !user.facebook.sexual) {
+                    if (!user.facebook.birthDate) {
                         user.facebook.fameRating += 20;
                     }
                     user.facebook.gender = req.body.gender;
@@ -547,7 +448,7 @@ module.exports = (app, passport, uploads) => {
                         user.facebook.active = 1;
                     }
                 } else {
-                    if (!user.google.birthDate && !user.google.biography && !user.google.interests && !user.google.sexual) {
+                    if (!user.google.birthDate) {
                         user.google.fameRating += 20;
                     }
                     user.google.gender = req.body.gender;
@@ -834,7 +735,7 @@ module.exports = (app, passport, uploads) => {
                                             newConnection.first = req.body.who;
                                             newConnection.second = req.body.whom;
 
-                                            newLocation.save(function(err, connect) {
+                                            newConnection.save(function(err, connect) {
                                                 if (err)
                                                    throw err;
                                                 if (connect) {
@@ -857,7 +758,7 @@ module.exports = (app, passport, uploads) => {
                                             newConnection.first = req.body.who;
                                             newConnection.second = req.body.whom;
 
-                                            newLocation.save(function(err, connect) {
+                                            newConnection.save(function(err, connect) {
                                                 if (err)
                                                    throw err;
                                                 if (connect) {
@@ -880,7 +781,7 @@ module.exports = (app, passport, uploads) => {
                                             newConnection.first = req.body.who;
                                             newConnection.second = req.body.whom;
 
-                                            newLocation.save(function(err, connect) {
+                                            newConnection.save(function(err, connect) {
                                                 if (err)
                                                    throw err;
                                                 if (connect) {

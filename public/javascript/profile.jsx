@@ -30,19 +30,64 @@ $(document).ready(function() {
 	$(window).scroll(function() {
 		if ($(document).height() - $(window).height() == $(window).scrollTop()) {
 			$('#loading').show();
+			limit += 5;
 
-			/*
-            $.ajax({
-                url: 'get-post.php',
-                dataType: 'html',
-                success: function(html) {
-                    $('#posts').append(html);
-                    $('#loading').hide();
-                }
-            });
-            */
-
-			// $('#posts').append(randomPost()); Add new users
+			$.ajax({
+    			type: 'POST',
+        		url: 'http://localhost:8000/search/' + limit,
+        		dataType: 'json',
+        		data: dataSearch,
+        		success: function(response) {
+        			response.forEach((user) => {
+        				if (user.local.email) {
+        					$(`
+        						<div class="user-search-profile">
+	        						<h3> ${user.local.firstName} ${user.local.lastName} </h3>
+	        						<img src="${user.local.avatar}" class="user-search-photo">
+	        						<p>
+	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
+	        						</p>
+	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
+        							<hr >
+        						</div>
+        						`).appendTo(".profile-search .profile-view");
+        				} else if (user.facebook.email) {
+        					$(`
+        						<div class="user-search-profile">
+	        						<h3> ${user.facebook.firstName} ${user.facebook.lastName} </h3>
+	        						<img src="${user.facebook.avatar}" class="user-search-photo">
+	        						<p>
+	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
+	        						</p>
+	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
+        							<hr >
+        						</div>
+        						`).appendTo(".profile-search .profile-view");
+        				} else {
+        					$(`
+        						<div class="user-search-profile">
+	        						<h3> ${user.google.firstName} ${user.google.lastName} </h3>
+	        						<img src="${user.google.avatar}" class="user-search-photo">
+	        						<p>
+	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
+	        						</p>
+	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
+        							<hr >
+        						</div>
+        						`).appendTo(".profile-search .profile-view");
+        				}
+        			});		
+        		}
+    		});
             $('#loading').hide();
 		}
 	});
@@ -746,7 +791,10 @@ var ProfileSearch = React.createClass({
         return {
             gender: this.props.user.gender ==  'male' ? 'female' : 'male',
             sexual: this.props.user.sexual || 'heterosexual',
-            age: 18
+            age: 18,
+            rating: 50,
+            location: '',
+            tags: ''
         };
     },
 
@@ -756,6 +804,10 @@ var ProfileSearch = React.createClass({
     
     handleSexual(event) {
     	this.setState({ sexual: event.target.value });
+    },
+
+    handleTags(event) {
+    	this.setState({ tags: event.target.value });
     },
 
     handleAge(event) {
@@ -774,11 +826,30 @@ var ProfileSearch = React.createClass({
     	this.setState({ age: event.target.value });
     },
 
+    handleRating(event) {
+    	var from_rat = parseInt(event.target.value) - 10;
+    	var to_rat = parseInt(event.target.value) + 10;
+
+    	if (event.target.value <= 10) {
+    		from_rat = 10;
+			to_rat = 20;    		
+    	}
+    	if (event.target.value > 90) {
+    		to_rat = 100;
+    	}
+    	$('.span-from-rat').text(from_rat);
+    	$('.span-to-rat').text(to_rat);
+    	this.setState({ rating: event.target.value });
+    },
+
     handleSearch() {
     	$('.user-search-profile').remove();
     	dataSearch.gender = '';
     	dataSearch.sexual = '';
     	dataSearch.age = '';
+    	dataSearch.rating = '';
+    	dataSearch.location = '';
+
 
     	if ($('input[name="gender-check"]').is(':checked')) {
     		dataSearch.gender = this.state.gender;
@@ -789,7 +860,39 @@ var ProfileSearch = React.createClass({
     	if ($('input[name="age-check"]').is(':checked')) {
     		dataSearch.age = this.state.age;
     	}
-    	if (dataSearch.gender || dataSearch.sexual || dataSearch.age) {
+    	if ($('input[name="rating-check"]').is(':checked')) {
+    		dataSearch.rating = this.state.rating;
+    	}
+    	if ($('input[name="location-check"]').is(':checked')) {
+    		dataSearch.location = this.state.location;
+    	}
+    	if ($('input[name="tags-check"]').is(':checked')) {
+    		var interests = this.state.tags.split(' ');
+    		var regexp = /\B#\w*[a-zA-Z0-9]+\w*/;
+    		var senderInterest = true;
+
+    		interests.forEach(interest => {
+	    		if (regexp.test(interest)) {
+	    			interest = interest.substring(1);
+	    			if (interest.indexOf("#") !== -1) {
+	    				senderInterest = false;	
+	    			}
+	    		} else {
+	    			senderInterest = false;
+	    		}
+    		});
+    		if (senderInterest) {
+    			dataSearch.tags = this.state.tags;
+    		} else {
+    			$('input[name="tags"]').css('border', '2px solid #F02843');
+				dataSearch.gender = '';
+		    	dataSearch.sexual = '';
+		    	dataSearch.age = '';
+		    	dataSearch.rating = '';
+		    	dataSearch.location = '';    			
+    		}
+    	}
+    	if (dataSearch.gender || dataSearch.sexual || dataSearch.age || dataSearch.rating || dataSearch.location) {
     		dataSearch.limit = limit;
     		dataSearch.id = UserID;
     		$.ajax({
@@ -857,16 +960,14 @@ var ProfileSearch = React.createClass({
 			<div className="container profile-search">
         		<div className="profile-view">
         			<h1 id="search-header">Search module</h1>
-    				<div className="search-module">
-    					
+    				<div className="search-module">			
     					<div className="form-control">
 		        			<label htmlFor="user-gender-search"><input type="checkbox" name="gender-check" />Gender: </label>
 		        			<select name="gender" id="user-gender-search" onChange={this.handleGender} value={this.state.gender} >
 		        				<option value="male">male</option>
 		        				<option value="female">female</option>
 		        			</select>
-	        			</div>
-	        			
+	        			</div>	        			
 	        			<div className="form-control">
 		        			<label htmlFor="user-sexual-search"><input type="checkbox" name="sexual-check" />Orientation: </label>
 		        			<select name="sexual" id="user-sexual-search" onChange={this.handleSexual} value={this.state.sexual} >
@@ -896,8 +997,8 @@ var ProfileSearch = React.createClass({
 	        			</div>
 	        			<div className="form-control">
 		        			<label htmlFor="user-rating-search"><input type="checkbox" name="rating-check" />Rating: </label>
-		        			<input type="range" list="tickmarks" name="rating" id="user-rating-search" value={this.state.rating} onChange={this.handleRating} />
-							<datalist id="tickmarks">
+		        			<input type="range" list="tickmarks-rating" name="rating" id="user-rating-search" value={this.state.rating} onChange={this.handleRating} />
+							<datalist id="tickmarks-rating">
 								<option value="0"/>
 								<option value="10"/>
 								<option value="20"/>
@@ -910,8 +1011,16 @@ var ProfileSearch = React.createClass({
 								<option value="90"/>
 								<option value="100"/>
 							</datalist>
-							<p>From: <span className="span-from">16</span> to: <span className="span-to">20</span></p>
+							<p>From: <span className="span-from-rat">40</span> to: <span className="span-to-rat">60</span></p>
 	        			</div>
+	        			<div className="form-control">
+		        			<label htmlFor="user-location-search"><input type="checkbox" name="location-check" />Location: </label>
+		        			<input type="text" name="location" id="user-location-search" placeholder="Lviv, Ukraine" onChange={this.handleLocation} value={this.state.location} />
+	        			</div>
+	        			<div className="form-control">
+		        			<label htmlFor="user-tags-search"><input type="checkbox" name="tags-check" />Interests: </label>
+		        			<input type="text" name="tags" id="user-tags-search" placeholder="#javascript #NodeJS" onChange={this.handleTags} value={this.state.tags} />
+	        			</div>		 
 	        			<div className="form-btn">
 		        			<button className="btn btn-success" onClick={this.handleSearch}>Search</button>
 	        			</div>

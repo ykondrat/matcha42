@@ -56,7 +56,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+require('./app/routes/auth')(app, passport);
 require('./app/routes')(app, passport, uploads);
+
 
 app.listen(port);
 console.log('\x1b[33m%s\x1b[0m', '========= Matcha server =========');

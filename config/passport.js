@@ -39,7 +39,7 @@ module.exports = (passport) => {
                             newUser.local.lastName = req.body.lastName;
                             newUser.local.email = email;
                             newUser.local.active = 0;
-                            newUser.local.gender = 'bisexual';
+                            newUser.local.sexual = 'bisexual';
                             newUser.local.fameRating = 10;
                             newUser.local.password = newUser.generateHash(password);
                             newUser.local.country = location.country;
