@@ -15,7 +15,6 @@ module.exports = (passport) => {
         });
     });
     
-    // Local Strategy of sign up
     passport.use('local-signup', new LocalStrategy({
         usernameField:  'email',
         passwordField:  'password',
@@ -60,7 +59,6 @@ module.exports = (passport) => {
         });
     }));
     
-    // Local Strategy of sign in
     passport.use('local-signin', new LocalStrategy({
         usernameField:  'email',
         passwordField:  'password',
@@ -100,7 +98,6 @@ module.exports = (passport) => {
             });
     }));
     
-    // Facebook OAuth
     var facebookOptions = {
         clientID: configAuth.facebookAuth.clientID,
         clientSecret: configAuth.facebookAuth.clientSecret,
@@ -140,8 +137,7 @@ module.exports = (passport) => {
         }); 
     };
     passport.use(new FacebookStrategy(facebookOptions, facebookCallBack));
-    
-    // Google OAuth
+
     var googleOptions = {
         clientID: configAuth.googleAuth.clientID,
         clientSecret: configAuth.googleAuth.clientSecret,
@@ -180,6 +176,5 @@ module.exports = (passport) => {
             });
         }); 
     };
-    passport.use(new GoogleStrategy(googleOptions, googleCallBack));
-    
-}
+    passport.use(new GoogleStrategy(googleOptions, googleCallBack)); 
+};

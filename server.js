@@ -56,9 +56,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+require('./app/routes/search')(app);
+require('./app/routes/block-report')(app);
+require('./app/routes/likes')(app);
+require('./app/routes/photo')(app, uploads);
+require('./app/routes/profile')(app);
+require('./app/routes/notification')(app);
 require('./app/routes/auth')(app, passport);
-require('./app/routes')(app, passport, uploads);
-
+require('./app/routes/main')(app);
 
 app.listen(port);
 console.log('\x1b[33m%s\x1b[0m', '========= Matcha server =========');

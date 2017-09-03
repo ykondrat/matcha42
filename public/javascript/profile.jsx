@@ -2,6 +2,7 @@ var User = JSON.parse(document.getElementById('dialog_wrapper').dataset.text);
 var UserID = User._id;
 var limit = 0;
 var dataSearch = {};
+var sendSearch = false;
 
 if (User.local.email) {
 	User = User.local;
@@ -27,10 +28,11 @@ $(document).ready(function() {
 			}
 		}
 	});
+
 	$(window).scroll(function() {
-		if ($(document).height() - $(window).height() == $(window).scrollTop()) {
+		if ($(document).height() - $(window).height() == $(window).scrollTop() && sendSearch) {
 			$('#loading').show();
-			limit += 5;
+			limit += 6;
 
 			$.ajax({
     			type: 'POST',
@@ -39,52 +41,30 @@ $(document).ready(function() {
         		data: dataSearch,
         		success: function(response) {
         			response.forEach((user) => {
+        				var currentUser;
+
         				if (user.local.email) {
-        					$(`
-        						<div class="user-search-profile">
-	        						<h3> ${user.local.firstName} ${user.local.lastName} </h3>
-	        						<img src="${user.local.avatar}" class="user-search-photo">
-	        						<p>
-	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
-										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
-										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
-										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
-	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
-        							<hr >
-        						</div>
-        						`).appendTo(".profile-search .profile-view");
-        				} else if (user.facebook.email) {
-        					$(`
-        						<div class="user-search-profile">
-	        						<h3> ${user.facebook.firstName} ${user.facebook.lastName} </h3>
-	        						<img src="${user.facebook.avatar}" class="user-search-photo">
-	        						<p>
-	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
-										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
-										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
-										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
-	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
-        							<hr >
-        						</div>
-        						`).appendTo(".profile-search .profile-view");
-        				} else {
-        					$(`
-        						<div class="user-search-profile">
-	        						<h3> ${user.google.firstName} ${user.google.lastName} </h3>
-	        						<img src="${user.google.avatar}" class="user-search-photo">
-	        						<p>
-	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
-										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
-										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
-										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
-	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
-        							<hr >
-        						</div>
-        						`).appendTo(".profile-search .profile-view");
-        				}
+					        currentUser = user.local;
+					    } else if (user.facebook.email) {
+					        currentUser = user.facebook;
+					    } else {
+					        currentUser = user.google;
+					    }
+    					$(`
+    						<div class="user-search-profile">
+    							<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}</p>
+        						<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
+        						<img src="${currentUser.avatar}" class="user-search-photo">
+        						<p>
+        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+									<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+									<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+									<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
+        						</p>
+        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
+    							<hr >
+    						</div>
+    						`).appendTo(".profile-search .profile-view");
         			});		
         		}
     		});
@@ -92,23 +72,23 @@ $(document).ready(function() {
 		}
 	});
 
-	setInterval(() => {
-		var data = {
-			id: UserID
-		};
+	// setInterval(() => {
+	// 	var data = {
+	// 		id: UserID
+	// 	};
 
-		$.ajax({
-			type: 'POST',
-			url: 'http://localhost:8000/get-notification',
-			dataType: 'json',
-			data: data,
-			success: function(response) {
-				if (response.subject) {
-					$('.badge').text(response.subject.length);
-				}
-			}
-		});
-	}, 5000);
+	// 	$.ajax({
+	// 		type: 'POST',
+	// 		url: 'http://localhost:8000/get-notification',
+	// 		dataType: 'json',
+	// 		data: data,
+	// 		success: function(response) {
+	// 			if (response.subject) {
+	// 				$('.badge').text(response.subject.length);
+	// 			}
+	// 		}
+	// 	});
+	// }, 5000);
 
 });
 
@@ -155,6 +135,8 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 
+		limit = 0;
+		sendSearch = false;
 		profileSettings.style.display = 'block';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
@@ -182,6 +164,8 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 
+		limit = 0;
+		sendSearch = false;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
@@ -196,6 +180,8 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 
+		limit = 0;
+		sendSearch = false;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'block';
@@ -210,6 +196,8 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 
+		limit = 0;
+		sendSearch = false;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'block';
 		profile.style.display = 'none';
@@ -224,6 +212,8 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 
+		limit = 0;
+		sendSearch = true;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
@@ -786,7 +776,6 @@ var ProfilePhoto = React.createClass({
 });
 
 var ProfileSearch = React.createClass({
-	
 	getInitialState() {
         return {
             gender: this.props.user.gender ==  'male' ? 'female' : 'male',
@@ -797,20 +786,24 @@ var ProfileSearch = React.createClass({
             tags: ''
         };
     },
-
     handleGender(event) {
+    	limit = 0;
     	this.setState({ gender: event.target.value });
     },
-    
     handleSexual(event) {
+    	limit = 0;
     	this.setState({ sexual: event.target.value });
     },
-
     handleTags(event) {
+    	limit = 0;
     	this.setState({ tags: event.target.value });
     },
-
+    handleLocation(event) {
+    	limit = 0;
+    	this.setState({ location: event.target.value });
+    },
     handleAge(event) {
+    	limit = 0;
     	var from_age = parseInt(event.target.value) - 2;
     	var to_age = parseInt(event.target.value) + 2;
 
@@ -825,8 +818,8 @@ var ProfileSearch = React.createClass({
     	$('.span-to').text(to_age);
     	this.setState({ age: event.target.value });
     },
-
     handleRating(event) {
+    	limit = 0;
     	var from_rat = parseInt(event.target.value) - 10;
     	var to_rat = parseInt(event.target.value) + 10;
 
@@ -841,7 +834,6 @@ var ProfileSearch = React.createClass({
     	$('.span-to-rat').text(to_rat);
     	this.setState({ rating: event.target.value });
     },
-
     handleSearch() {
     	$('.user-search-profile').remove();
     	dataSearch.gender = '';
@@ -852,18 +844,23 @@ var ProfileSearch = React.createClass({
 
 
     	if ($('input[name="gender-check"]').is(':checked')) {
+    		limit = 0;
     		dataSearch.gender = this.state.gender;
     	} 	
     	if ($('input[name="sexual-check"]').is(':checked')) {
+    		limit = 0;
     		dataSearch.sexual = this.state.sexual;
     	}
     	if ($('input[name="age-check"]').is(':checked')) {
+    		limit = 0;
     		dataSearch.age = this.state.age;
     	}
     	if ($('input[name="rating-check"]').is(':checked')) {
+    		limit = 0;
     		dataSearch.rating = this.state.rating;
     	}
     	if ($('input[name="location-check"]').is(':checked')) {
+    		limit = 0;
     		dataSearch.location = this.state.location;
     	}
     	if ($('input[name="tags-check"]').is(':checked')) {
@@ -875,7 +872,8 @@ var ProfileSearch = React.createClass({
 	    		if (regexp.test(interest)) {
 	    			interest = interest.substring(1);
 	    			if (interest.indexOf("#") !== -1) {
-	    				senderInterest = false;	
+	    				senderInterest = false;
+	    				limit = 0;
 	    			}
 	    		} else {
 	    			senderInterest = false;
@@ -889,10 +887,11 @@ var ProfileSearch = React.createClass({
 		    	dataSearch.sexual = '';
 		    	dataSearch.age = '';
 		    	dataSearch.rating = '';
-		    	dataSearch.location = '';    			
+		    	dataSearch.location = '';
+		    	limit = 0;    			
     		}
     	}
-    	if (dataSearch.gender || dataSearch.sexual || dataSearch.age || dataSearch.rating || dataSearch.location) {
+    	if (dataSearch.gender || dataSearch.sexual || dataSearch.age || dataSearch.rating || dataSearch.location || dataSearch.tags) {
     		dataSearch.limit = limit;
     		dataSearch.id = UserID;
     		$.ajax({
@@ -902,59 +901,154 @@ var ProfileSearch = React.createClass({
         		data: dataSearch,
         		success: function(response) {
         			response.forEach((user) => {
+        				var currentUser;
+
         				if (user.local.email) {
-        					$(`
-        						<div class="user-search-profile">
-	        						<h3> ${user.local.firstName} ${user.local.lastName} </h3>
-	        						<img src="${user.local.avatar}" class="user-search-photo">
-	        						<p>
-	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
-										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
-										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
-										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
-	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
-        							<hr >
-        						</div>
-        						`).appendTo(".profile-search .profile-view");
-        				} else if (user.facebook.email) {
-        					$(`
-        						<div class="user-search-profile">
-	        						<h3> ${user.facebook.firstName} ${user.facebook.lastName} </h3>
-	        						<img src="${user.facebook.avatar}" class="user-search-photo">
-	        						<p>
-	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
-										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
-										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
-										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
-	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
-        							<hr >
-        						</div>
-        						`).appendTo(".profile-search .profile-view");
-        				} else {
-        					$(`
-        						<div class="user-search-profile">
-	        						<h3> ${user.google.firstName} ${user.google.lastName} </h3>
-	        						<img src="${user.google.avatar}" class="user-search-photo">
-	        						<p>
-	        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
-										<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
-										<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
-										<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
-	        						</p>
-	        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
-        							<hr >
-        						</div>
-        						`).appendTo(".profile-search .profile-view");
-        				}
+					        currentUser = user.local;
+					    } else if (user.facebook.email) {
+					        currentUser = user.facebook;
+					    } else {
+					        currentUser = user.google;
+					    }
+    					$(`
+    						<div class="user-search-profile">
+        						<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}</p>
+        						<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
+        						<img src="${currentUser.avatar}" class="user-search-photo">
+        						<p>
+        							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+									<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+									<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+									<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
+        						</p>
+        						<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
+    							<hr >
+    						</div>
+    						`).appendTo(".profile-search .profile-view");
         			});
-        			
         		}
     		});
     	}
     },
+    handleFilterSort() {
+    	if ($('.filter').css('display') == 'none') {
+    		$('.filter').css('display', 'block');
+    		$('.sort').css('display', 'block');
+    	} else {
+    		$('.filter').css('display', 'none');
+    		$('.sort').css('display', 'none');
+    	}
+    },
+    handleFilter() {
+    	console.log($('.user-search-profile'));
+    	// console.log($('.filter input[name="age-filter"]').val());
+    	// console.log($('.filter input[name="rating-filter"]').val());
+    	// console.log($('.filter input[name="tags-filter"]').val());
+    	// console.log($('.filter input[name="location-filter"]').is(':checked'));
+    },
+    handleSort() {
+    	var arrayOfUsers = $('.user-search-profile');
 
+    	if ($('.sort input[name="age-sort"]').is(':checked')) {
+	    	arrayOfUsers.sort((userA, userB) => {
+	    		let today = new Date();
+                let birthDateA = new Date(userA.childNodes[1].innerHTML.split('|^|')[0]);
+                let birthDateB = new Date(userB.childNodes[1].innerHTML.split('|^|')[0]);
+                let ageA = today.getFullYear() - birthDateA.getFullYear();
+                let ageB = today.getFullYear() - birthDateB.getFullYear();
+                let mA = today.getMonth() - birthDateA.getMonth();
+                let mB = today.getMonth() - birthDateB.getMonth();
+  				
+                if (mA < 0 || (mA === 0 && today.getDate() < birthDateA.getDate())) {
+                    ageA--;
+                }
+                if (mB < 0 || (mB === 0 && today.getDate() < birthDateB.getDate())) {
+                    ageB--;
+                }
+
+	    		if (ageA < ageB) {
+	    			return (true);
+	    		}
+	    		return (false);
+	    	});
+    	}
+    	if ($('.sort input[name="rating-sort"]').is(':checked')) {
+	    	arrayOfUsers.sort((userA, userB) => {
+	    		let userArating = parseInt(userA.childNodes[1].innerHTML.split('|^|')[1]);
+	    		let userBrating = parseInt(userB.childNodes[1].innerHTML.split('|^|')[1]);
+
+	    		if (userArating < userBrating) {
+	    			return (true);
+	    		}
+	    		return (false);
+	    	});
+    	}
+    	if ($('.sort input[name="tags-sort"]').is(':checked')) {
+    		let interests = this.props.user.interests.split(' ');
+    		
+    		arrayOfUsers.sort((userA, userB) => {
+    			let interestA = userA.childNodes[1].innerHTML.split('|^|')[2].split(' ');
+    			let interestB = userB.childNodes[1].innerHTML.split('|^|')[2].split(' ');
+    			let counterA = 0;
+    			let counterB = 0;
+
+    			interestA.forEach((item) => {
+    				if (interests.includes(item)) {
+    					counterA++;
+    				}
+    			});
+    			interestB.forEach((item) => {
+    				if (interests.includes(item)) {
+    					counterB++;
+    				}
+    			});
+    			if (counterA < counterB) {
+    				return (true);
+    			}
+    			return (false);
+    		});
+    	}
+    	if ($('.sort input[name="location-sort"]').is(':checked')) {
+    		arrayOfUsers.sort((userA, userB) => {
+    			let currentLat = parseFloat(this.props.user.latitude);
+				let currentLng = parseFloat(this.props.user.longitude);
+				let radius = 6378137;
+
+				var deltaLat1 = parseFloat(currentLat) - parseFloat(userA.childNodes[1].innerHTML.split('|^|')[3]);
+				var deltaLon1 = parseFloat(currentLat) - parseFloat(userA.childNodes[1].innerHTML.split('|^|')[4]);
+				var angle1 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat1 / 2), 2) + Math.cos(currentLat) * Math.cos(parseFloat(userA.childNodes[1].innerHTML.split('|^|')[3])) * Math.pow( Math.sin ( deltaLon1 / 2), 2) ) );
+				var distance1 = radius * angle1;
+
+				var deltaLat2 = parseFloat(currentLat) - parseFloat(userB.childNodes[1].innerHTML.split('|^|')[3]);
+				var deltaLon2 = parseFloat(currentLat) - parseFloat(userB.childNodes[1].innerHTML.split('|^|')[4]);
+				var angle2 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat2 / 2), 2) + Math.cos(currentLat) * Math.cos(userB.childNodes[1].innerHTML.split('|^|')[3]) * Math.pow( Math.sin ( deltaLon2 / 2), 2) ) );
+				var distance2 = radius * angle2;
+
+				if (distance1 < distance2) {
+					return (true);
+				}
+				return (false);
+    		});
+    	}
+    	$('.user-search-profile').remove();
+    	arrayOfUsers.each(function() {
+  			$(`
+				<div class="user-search-profile">
+					<p class="info-search">${$( this )[0].childNodes[1].innerHTML}</p>
+					<h3> ${$( this )[0].childNodes[3].innerText} </h3>
+					<img src="${$( this )[0].childNodes[5].currentSrc}" class="user-search-photo">
+					<p>
+						<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${$( this )[0].childNodes[7].children[0].getAttribute('value')}" data-id="${$( this )[0].childNodes[7].children[0].getAttribute('data-id')}" onclick="sendLike(this)"></i>
+						<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${$( this )[0].childNodes[7].children[0].getAttribute('value')}" data-id="${$( this )[0].childNodes[7].children[0].getAttribute('data-id')}" onclick="sendDislike(this)"></i>
+						<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${$( this )[0].childNodes[7].children[0].getAttribute('value')}" data-id="${$( this )[0].childNodes[7].children[0].getAttribute('data-id')}" onclick="blockUser(this)"></i>
+						<i class="fa fa-2x fa-ban" aria-hidden="true" value="${$( this )[0].childNodes[7].children[0].getAttribute('value')}" data-id="${$( this )[0].childNodes[7].children[0].getAttribute('data-id')}" onclick="reportUser(this)"></i>
+					</p>
+					<button class="btn btn-success btn-view" value="${$( this )[0].childNodes[7].children[0].getAttribute('value')}" data-id="${$( this )[0].childNodes[7].children[0].getAttribute('data-id')}" onclick="openProfile(this)">View profile</button>
+					<hr >
+				</div>
+    		`).appendTo(".profile-search .profile-view");
+		});
+    },
 	render() {
 		return (
 			<div className="container profile-search">
@@ -1027,6 +1121,27 @@ var ProfileSearch = React.createClass({
     				</div>
         		</div>
         		<p id="loading"><i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i></p>
+        		<div className="filter-sort">
+        			<p onClick={this.handleFilterSort}>
+        			<i className="fa fa-filter" aria-hidden="true"></i> <i className="fa fa-sort" aria-hidden="true"></i>
+        			</p>
+        			<div className="filter">
+        				<h3>Filter</h3>
+        				<input type="number" name="age-filter" placeholder="Age"/>
+        				<input type="number" name="rating-filter" placeholder="Rating"/>
+        				<input type="text" name="tags-filter" placeholder="Interests" />
+        				<input type="checkbox" name="location-filter" />Location <i className="fa fa-sort-amount-asc" aria-hidden="true"></i>
+        				<button onClick={this.handleFilter}>Filter <i className="fa fa-filter" aria-hidden="true"></i></button>
+        			</div>
+        			<div className="sort">
+        				<h3>Sort</h3>
+        				<input type="checkbox" name="age-sort"/> Age <i className="fa fa-sort-numeric-desc" aria-hidden="true"></i><br />
+        				<input type="checkbox" name="rating-sort"/> Rating <i className="fa fa-sort-numeric-desc" aria-hidden="true"></i><br />
+        				<input type="checkbox" name="tags-sort" /> Interests <i className="fa fa-sort-numeric-desc" aria-hidden="true"></i><br />
+        				<input type="checkbox" name="location-sort" />Location <i className="fa fa-sort-amount-asc" aria-hidden="true"></i>
+        				<button onClick={this.handleSort}>Sort <i className="fa fa-sort" aria-hidden="true"></i></button>
+        			</div>
+        		</div>
         	</div>
 		);		
 	}
@@ -1039,7 +1154,7 @@ ReactDOM.render(
     	<ProfileSettings user={User} />
     	<ProfileModify user={User} />
     	<ProfilePhoto user={User} />
-    	<ProfileSearch user={User} />	
+    	<ProfileSearch user={User} />
     </div>,
     document.getElementById('content')
 );

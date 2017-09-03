@@ -1,5 +1,5 @@
-var User            = require('../models/user');
-var Location        = require('../models/location');
+const User          = require('../models/user');
+const Location      = require('../models/location');
 const nodemailer    = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -11,14 +11,13 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = (app, passport) => {
-
-	// Logout from site
     app.get('/logout', (req, res) => {
         req.logout();
         res.redirect('/');
     });
-    
-    // Forgot password
+    app.get('/profile', isLoggedOn, (req, res) => {
+        res.render('profile', { title: 'matcha profile', user: req.user });
+    });
     app.post('/forgot-password', (req, res) => {
         User.findOne({ 'local.email': req.body.email }, (err, user) => {
             if (err) {
@@ -86,22 +85,16 @@ module.exports = (app, passport) => {
             }
         });
     });
-
-    // Sigin with passport.js
     app.post('/signin', passport.authenticate('local-signin', {
         successRedirect: '/profile',
         failureRedirect: '/',
         failureFlash: true
     }));
-    
-    // Signup with passport.js
     app.post('/signup', passport.authenticate('local-signup', {
         successRedirect: '/profile',
         failureRedirect: '/',
         failureFlash: true
     }));
-    
-    // Facebook routes
     app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email', 'public_profile'] }));
 	app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/'  }), (req, res) => {
         User.findById(req.user._id, function (err, user) {
@@ -132,8 +125,6 @@ module.exports = (app, passport) => {
             } 
         });
     });
-
-    // Google+ routes
     app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 	app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => {
         User.findById(req.user._id, function (err, user) {
@@ -164,8 +155,6 @@ module.exports = (app, passport) => {
             } 
         });
     });
-    
-    // Set geolocation of user
     app.post('/geolocation', (req, res) => {
         process.nextTick(() => { 
             Location.findOne({ 'sessionId': req.sessionID }, (err, location) => {
@@ -201,3 +190,10 @@ module.exports = (app, passport) => {
         });
     });
 };
+
+function isLoggedOn(req, res, next) {
+    if (req.isAuthenticated()) {
+        return (next());
+    }
+    res.redirect('/');
+}

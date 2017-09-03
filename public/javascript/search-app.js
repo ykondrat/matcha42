@@ -51,12 +51,14 @@ function blockUser(item) {
 		who : item.dataset.id,
 		whom : item.getAttribute("value")
 	};
+
 	$.ajax({
 		type: 'POST',
 		url: 'http://localhost:8000/block-user',
 		dataType: 'json',
 		data: data
 	});
+	$(item).parents()[1].remove();
 }
 
 function reportUser(item) {

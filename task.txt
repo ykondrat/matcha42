@@ -47,7 +47,7 @@
 		+ A “fame rating” gap.
 		+ A location.
 		+ One or multiple interests tags.
-	- As per the suggestion list, the resulting list must be sortable and filterable by age,
+	+/- As per the suggestion list, the resulting list must be sortable and filterable by age,
 	location, “fame rating” and tags.
 
 5. Profile of other users
@@ -88,38 +88,6 @@
 	- Create an interactive map of the users (which implies a more precise GPS localization
 	  via JavaScript).
 	+ Infinit pagination
-
-
-
-// sort
-
-function sortUserGeo(userA, userB) {
-	var currentLat = ;
-	var currentLng = ; 
-	var radius = 6378137;
-
-	var deltaLat1 = parseFloat(currentLat) - parseFloat(userA.latitude);
-	var deltaLon1 = parseFloat(currentLat) - parseFloat(userA.longitude);
-	var angle1 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat1 / 2), 2) + Math.cos(currentLat) * Math.cos(userA.latitude) * Math.pow( Math.sin ( deltaLon1 / 2), 2) ) );r
-	var distance1 = radius * angle1;
-
-	var deltaLat2 = parseFloat(currentLat) - parseFloat(userB.latitude);
-	var deltaLon2 = parseFloat(currentLat) - parseFloat(userB.longitude);
-	var angle2 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat2 / 2), 2) + Math.cos(currentLat) * Math.cos(userB.latitude) * Math.pow( Math.sin ( deltaLon2 / 2), 2) ) );r
-	var distance2 = radius * angle2;
-
-	if (distance1 > distance2) {
-		return (1);
-	} else if (distance1 < distance2) {
-		return (-1);
-	}
-	return (0);
-}
-
-
-pagination
-search location
-block report search(bug )
 
 
 
