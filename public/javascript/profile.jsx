@@ -11,12 +11,10 @@ if (User.local.email) {
 } else {
 	User = User.google;
 }
-
 $(document).ready(function() {
 	var data = {
 		id: UserID
 	};
-
 	$.ajax({
 		type: 'POST',
 		url: 'http://localhost:8000/get-notification',
@@ -28,7 +26,46 @@ $(document).ready(function() {
 			}
 		}
 	});
+	$.ajax({
+		type: 'GET',
+		url: 'http://localhost:8000/get-users',
+		dataType: 'json',
+		success: function(response) {
+			var interactive_coords = {
+        		lat: parseFloat(User.latitude),
+        		lng: parseFloat(User.longitude)
+	        }
+			var interactive_map = new google.maps.Map(document.getElementById('interactive_map'), {
+		        zoom: 5,
+		        center: interactive_coords
+		    });
+		    var interactive_marker = new google.maps.Marker({
+			    position: interactive_coords,
+			    map: interactive_map,
+			    title: User.firstName + ' ' + User.lastName
+			});
+			response.forEach((user, index) => {
+				let currentUser;
+				if (user.local.email) {
+					currentUser = user.local;
+				} else if (user.facebook.email) {
+					currentUser = user.facebook;
+				} else {
+					currentUser = user.google;
+				}
 
+				interactive_coords = {
+	        		lat: parseFloat(currentUser.latitude),
+	        		lng: parseFloat(currentUser.longitude)
+	        	}
+			    var markerUser = new google.maps.Marker({
+			        position: interactive_coords,
+			        map: interactive_map,
+			        title: currentUser.firstName + ' ' + currentUser.lastName
+			    });
+			});
+		}
+	});
 	$(window).scroll(function() {
 		if ($(document).height() - $(window).height() == $(window).scrollTop() && sendSearch) {
 			$('#loading').show();
@@ -52,7 +89,7 @@ $(document).ready(function() {
 					    }
     					$(`
     						<div class="user-search-profile">
-    							<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}</p>
+    							<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}|^|${currentUser.city}|^|${currentUser.country}</p>
         						<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
         						<img src="${currentUser.avatar}" class="user-search-photo">
         						<p>
@@ -71,7 +108,7 @@ $(document).ready(function() {
             $('#loading').hide();
 		}
 	});
-
+	stateForMatcha();
 	// setInterval(() => {
 	// 	var data = {
 	// 		id: UserID
@@ -89,18 +126,77 @@ $(document).ready(function() {
 	// 		}
 	// 	});
 	// }, 5000);
-
 });
+function stateForMatcha() {
+	if (User.active == 1) {
+		var data = {
+			id: UserID,
+			gender: User.gender,
+			sexual: User.sexual,
+			birthDate: User.birthDate,
+			rating: User.fameRating,
+			interests: User.interests,
+			lat: User.latitude,
+			lng: User.longitude
+		};
+		var dataReturn;
+		$.ajax({
+			type: 'POST',
+			url: 'http://localhost:8000/get-matcha',
+			dataType: 'json',
+			data: data,
+			success: function(response) {
+				response.forEach((user) => {
+					var currentUser;
+					if (user.local.email) {
+				        currentUser = user.local;
+				    } else if (user.facebook.email) {
+				        currentUser = user.facebook;
+				    } else {
+				        currentUser = user.google;
+				    }
+					$(`
+						<div class="user-search-profile">
+							<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}|^|${currentUser.city}|^|${currentUser.country}</p>
+							<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
+							<img src="${currentUser.avatar}" class="user-search-photo">
+							<p>
+								<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
+								<i class="fa fa-2x fa-thumbs-o-down" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendDislike(this)"></i>
+								<i class="fa fa-2x fa-user-times" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="blockUser(this)"></i>
+								<i class="fa fa-2x fa-ban" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="reportUser(this)"></i>
+							</p>
+							<button class="btn btn-success btn-view" value="${user._id}" data-id="${UserID}" onclick="openProfile(this)">View profile</button>
+							<hr >
+						</div>
+						`).appendTo(".profile-matcha .profile-view");
+				});		
+			}
+		});
+	}
+}
+var Matcha = React.createClass({
+	render() {
+		let msg = null;
 
-
-
+		if (User.active == 0) {
+			msg = <p className="errorActive">Only for active users</p>;
+		}
+		return (
+			<div className="container profile-matcha">
+        		<div className="profile-view">
+        			<h1 id="matcha-header">Matcha</h1>
+        			{ msg }
+        		</div>
+        	</div>
+		);
+	}
+});
 var ProfileHeader = React.createClass({
-	
 	handleNotification() {
 		var data = {
 			id: UserID
 		};
-
 		$.ajax({
 			type: 'POST',
 			url: 'http://localhost:8000/get-notification-view',
@@ -123,21 +219,20 @@ var ProfileHeader = React.createClass({
 			}
 		})
 	},
-
 	handleLogout() {
 		window.location.href = "http://localhost:8000/logout"
 	},
-	
 	handleSettings() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
+		let profileMatcha 			= document.querySelector('.profile-matcha');
 
-		limit = 0;
 		sendSearch = false;
 		profileSettings.style.display = 'block';
+		profileMatcha.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
@@ -163,8 +258,9 @@ var ProfileHeader = React.createClass({
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
+		let profileMatcha 			= document.querySelector('.profile-matcha');
 
-		limit = 0;
+		profileMatcha.style.display = 'none';
 		sendSearch = false;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
@@ -172,55 +268,70 @@ var ProfileHeader = React.createClass({
 		profileModify.style.display = 'block';
 		profileSearch.style.display = 'none';
 	},
-	
 	handleProfile() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
+		let profileMatcha 			= document.querySelector('.profile-matcha');
 
-		limit = 0;
 		sendSearch = false;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'block';
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'none';
+		profileMatcha.style.display = 'none';
 	},
-
 	handlePhotos() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
+		let profileMatcha 			= document.querySelector('.profile-matcha');
 
-		limit = 0;
 		sendSearch = false;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'block';
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'none';
+		profileMatcha.style.display = 'none';
 	},
-
 	handleSearch() {
 		let profile 				= document.querySelector('.profile-main');
 		let profileSettings 		= document.querySelector('.profile-settings');
 		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
+		let profileMatcha 			= document.querySelector('.profile-matcha');
 
-		limit = 0;
 		sendSearch = true;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'block';
+		profileMatcha.style.display = 'none';
 	},
+	handleMatcha(){
+		let profile 				= document.querySelector('.profile-main');
+		let profileSettings 		= document.querySelector('.profile-settings');
+		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
+		let profileModify 			= document.querySelector('.profile-modify');
+		let profileSearch 			= document.querySelector('.profile-search');
+		let profileMatcha 			= document.querySelector('.profile-matcha');
 
+		sendSearch = true;
+		profileSettings.style.display = 'none';
+		profileSettingsPhoto.style.display = 'none';
+		profile.style.display = 'none';
+		profileModify.style.display = 'none';
+		profileSearch.style.display = 'none';
+		profileMatcha.style.display = 'block';
+	},
 	render() {
 		var imgStyle = {
 			width: '50px',
@@ -235,7 +346,7 @@ var ProfileHeader = React.createClass({
 							<span className="navbar-toggler-icon"></span>
 						</button>
 		  				<div className="navbar-brand user-info" href="http://localhost:8000/profile">
-		  					<div className="user-info" onClick={this.handleProfile}>matcha</div>
+		  					<div className="user-info" onClick={this.handleMatcha}>matcha</div>
 		  					<div className="user-info profile">
 		  						<img src={this.props.user.avatar} style={imgStyle} onClick={this.handleProfile}/>
 		  						
@@ -272,9 +383,7 @@ var ProfileHeader = React.createClass({
         );
     }
 });
-
 var ProfileInfo = React.createClass({
-	
 	render() {
 		let activeMsg = null;
     	let birthday = null;
@@ -340,11 +449,11 @@ var ProfileInfo = React.createClass({
 					</div>
 					<div className="ldBar" data-preset="energy" data-value= {this.props.user.fameRating} ></div>
         		</div>
+        		<div id='interactive_map'></div>
         	</div>    
         );
     }
 });
-
 var ProfileModify = React.createClass({
 	
 	getInitialState() {
@@ -454,7 +563,6 @@ var ProfileModify = React.createClass({
         );
     }
 });
-
 var ProfileSettings = React.createClass({
 	
 	getInitialState() {
@@ -523,7 +631,7 @@ var ProfileSettings = React.createClass({
 				    var marker = new google.maps.Marker({
 				        position: coords,
 				        map: map,
-				        title: 'I am here ;)'
+				        title: this.props.user.firstName + ' ' + this.props.user.lastName
 				    });
 				    
 				    $.ajax({
@@ -537,6 +645,7 @@ var ProfileSettings = React.createClass({
 	    			});
 				}
 			});
+
     	}
     	interests.forEach(interest => {
     		if (regexp.test(interest)) {
@@ -561,8 +670,8 @@ var ProfileSettings = React.createClass({
     		$("<p class='error-settings'>Please provide your biography</p>").insertAfter("#settings-header");
     	}
     	if (senderAbout && senderInterest && this.state.birthday != '') {
-
-    		var data = {
+    		setTimeout(() => {
+    			var data = {
     			id: UserID,
     			gender: this.state.gender,
             	sexual: this.state.sexual,
@@ -578,6 +687,7 @@ var ProfileSettings = React.createClass({
     			data.country = coords.country;
     		}
 
+    		console.log(data);
     		$.ajax({
     			type: 'POST',
         		url: 'http://localhost:8000/user-info',
@@ -585,6 +695,7 @@ var ProfileSettings = React.createClass({
         		data: data
     		});
     		window.location.href = 'http://localhost:8000/profile';
+    		}, 1000);
     	}
     },
 
@@ -635,7 +746,6 @@ var ProfileSettings = React.createClass({
         );
     }
 });
-
 var ProfilePhoto = React.createClass({
 	
 	handlePhoto(event) {
@@ -774,7 +884,6 @@ var ProfilePhoto = React.createClass({
 		);		
 	}
 });
-
 var ProfileSearch = React.createClass({
 	getInitialState() {
         return {
@@ -912,7 +1021,7 @@ var ProfileSearch = React.createClass({
 					    }
     					$(`
     						<div class="user-search-profile">
-        						<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}</p>
+        						<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}|^|${currentUser.city}|^|${currentUser.country}</p>
         						<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
         						<img src="${currentUser.avatar}" class="user-search-photo">
         						<p>
@@ -940,11 +1049,72 @@ var ProfileSearch = React.createClass({
     	}
     },
     handleFilter() {
-    	console.log($('.user-search-profile'));
-    	// console.log($('.filter input[name="age-filter"]').val());
-    	// console.log($('.filter input[name="rating-filter"]').val());
-    	// console.log($('.filter input[name="tags-filter"]').val());
-    	// console.log($('.filter input[name="location-filter"]').is(':checked'));
+    	var watch = $('.user-search-profile');
+    	var arrayOfUsers = $('.user-search-profile');
+
+    	if ($('.filter input[name="age-filter"]').val().trim()) {
+			arrayOfUsers = $.grep(arrayOfUsers, function (user, index) {
+				let today = new Date();
+				let birthDate = new Date(user.querySelector('.info-search').innerHTML.split('|^|')[0]);
+				let age = today.getFullYear() - birthDate.getFullYear();
+	            let m = today.getMonth() - birthDate.getMonth();
+					
+	            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+	                age--;
+	            }
+	    		if (age == parseInt($('.filter input[name="age-filter"]').val())) {
+	    			return (true);
+	    		}
+	    		return (false);
+			});
+    	}
+    	if ($('.filter input[name="rating-filter"]').val().trim()) {
+    		arrayOfUsers = $.grep(arrayOfUsers, function (user, index) {
+				if (parseInt(user.querySelector('.info-search').innerHTML.split('|^|')[1]) == parseInt($('.filter input[name="rating-filter"]').val().trim())) {
+	    			return (true);
+	    		}
+	    		return (false);
+			});
+    	}
+    	if ($('.filter input[name="tags-filter"]').val().trim()) {
+    		let interests = this.props.user.interests.split(' ');
+
+    		arrayOfUsers = $.grep(arrayOfUsers, function (user, index) {
+				let tags = user.querySelector('.info-search').innerHTML.split('|^|')[2].split(' ');
+	            let match = tags.length;
+
+                tags.forEach((item) => {
+                    if (interests.includes(item)) {
+                        match--;
+                    }
+                });
+                if (match == 0) {
+                    return (true);
+                }
+                return (false);
+			});
+    	}
+    	if ($('.filter input[name="location-filter"]').is(':checked')) {
+    		let city = this.props.user.city;
+    		let country = this.props.user.country;
+
+    		arrayOfUsers = $.grep(arrayOfUsers, function (user, index) {
+				let userCity = user.querySelector('.info-search').innerHTML.split('|^|')[5];
+	            let userCountry = user.querySelector('.info-search').innerHTML.split('|^|')[6];
+
+	            if (city == userCity && country == userCountry) {
+	            	return (true);
+	            }
+	            return (false);
+			});
+    	}
+    	watch.each(function() {
+    		if (arrayOfUsers.includes($(this)[0])) {
+    			$($(this)[0]).css('display', 'block');
+    		} else {
+    			$($(this)[0]).css('display', 'none');
+    		}
+    	});
     },
     handleSort() {
     	var arrayOfUsers = $('.user-search-profile');
@@ -1015,13 +1185,13 @@ var ProfileSearch = React.createClass({
 				let radius = 6378137;
 
 				var deltaLat1 = parseFloat(currentLat) - parseFloat(userA.childNodes[1].innerHTML.split('|^|')[3]);
-				var deltaLon1 = parseFloat(currentLat) - parseFloat(userA.childNodes[1].innerHTML.split('|^|')[4]);
+				var deltaLon1 = parseFloat(currentLng) - parseFloat(userA.childNodes[1].innerHTML.split('|^|')[4]);
 				var angle1 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat1 / 2), 2) + Math.cos(currentLat) * Math.cos(parseFloat(userA.childNodes[1].innerHTML.split('|^|')[3])) * Math.pow( Math.sin ( deltaLon1 / 2), 2) ) );
 				var distance1 = radius * angle1;
 
 				var deltaLat2 = parseFloat(currentLat) - parseFloat(userB.childNodes[1].innerHTML.split('|^|')[3]);
-				var deltaLon2 = parseFloat(currentLat) - parseFloat(userB.childNodes[1].innerHTML.split('|^|')[4]);
-				var angle2 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat2 / 2), 2) + Math.cos(currentLat) * Math.cos(userB.childNodes[1].innerHTML.split('|^|')[3]) * Math.pow( Math.sin ( deltaLon2 / 2), 2) ) );
+				var deltaLon2 = parseFloat(currentLng) - parseFloat(userB.childNodes[1].innerHTML.split('|^|')[4]);
+				var angle2 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat2 / 2), 2) + Math.cos(currentLat) * Math.cos(parseFloat(userB.childNodes[1].innerHTML.split('|^|')[3])) * Math.pow( Math.sin ( deltaLon2 / 2), 2) ) );
 				var distance2 = radius * angle2;
 
 				if (distance1 < distance2) {
@@ -1146,10 +1316,10 @@ var ProfileSearch = React.createClass({
 		);		
 	}
 });
-
 ReactDOM.render(
 	<div>
     	<ProfileHeader user={User} />
+    	<Matcha />
     	<ProfileInfo user={User} />
     	<ProfileSettings user={User} />
     	<ProfileModify user={User} />

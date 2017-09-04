@@ -346,7 +346,18 @@ input[type="checkbox"] {
     .filter-sort .sort input[type="checkbox"] {
       display: inline; }
 
-#map {
+.profile-matcha {
+  margin-top: 100px;
+  display: none; }
+
+#matcha-header {
+  padding-bottom: 7px;
+  padding-top: 7px;
+  font-weight: bold;
+  color: #D2D2D2;
+  text-shadow: 2px 2px #468939; }
+
+#map, #interactive_map {
   margin-left: auto;
   margin-right: auto;
   width: 100%;

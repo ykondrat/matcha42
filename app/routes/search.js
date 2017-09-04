@@ -115,6 +115,146 @@ module.exports = (app) => {
             });
         });
     });
+    app.get('/get-users', isLoggedOn, (req, res) => {
+        User.find({}, (err, data) => {
+            if (err) {
+                throw err;
+            }
+            if (data) {
+                res.send(data);
+            }
+        })
+    });
+    app.post('/get-matcha', (req, res) => {
+        User.find({}, (err, data) => {
+            data = data.filter(item => item._id != req.body.id);
+
+            if (req.body.sexual == 'heterosexual') {
+                data = data.filter((item) => {
+                    var currentUser = getCurrentUser(item);
+                    if ((currentUser.gender != req.body.gender) && (currentUser.sexual == 'heterosexual' || currentUser.sexual == 'bisexual')) {
+                        return (true);
+                    }
+                    return (false);
+                });
+            } else if (req.body.sexual == 'homosexual') {
+                data = data.filter((item) => {
+                    var currentUser = getCurrentUser(item);
+                    if ((currentUser.gender == req.body.gender) && (currentUser.sexual == 'homosexual')) {
+                        return (true);
+                    }
+                    return (false);
+                });
+            } else {
+                data = data.filter((item) => {
+                    var currentUser = getCurrentUser(item);
+                    if (currentUser.sexual == req.body.sexual) {
+                        return (true);
+                    }
+                    return (false);
+                });
+            }
+            data = data.filter((item) => {
+                var currentUser = getCurrentUser(item);
+                let from = parseInt(req.body.rating) - 20;
+                let to = parseInt(req.body.rating) + 50;
+                if (parseInt(currentUser.fameRating) >= from &&  parseInt(currentUser.fameRating) <= to) {
+                    return (true);
+                }
+                return (false);
+            });
+
+            var today = new Date();
+            var birthDateUser = new Date(req.body.birthDate);
+            var ageUser = today.getFullYear() - birthDateUser.getFullYear();
+            var mUser = today.getMonth() - birthDateUser.getMonth();
+            
+            if (mUser < 0 || (mUser === 0 && today.getDate() < birthDateUser.getDate())) {
+                ageUser--;
+            }
+
+            data = data.filter((item) => {
+                var currentUser = getCurrentUser(item);
+                let birthDate = new Date(currentUser.birthDate);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                let m = today.getMonth() - birthDate.getMonth();
+                
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (age >= ageUser - 2 && age <= ageUser + 2) {
+                    return (true);
+                } 
+                return (false);
+            });
+
+            let interests = req.body.interests.split(' ');
+            
+            data.sort((userA, userB) => {
+                userA = getCurrentUser(userA);
+                userB = getCurrentUser(userB);
+                let interestA = userA.interests.split(' ');
+                let interestB = userB.interests.split(' ');
+                let counterA = 0;
+                let counterB = 0;
+
+                interestA.forEach((item) => {
+                    if (interests.includes(item)) {
+                        counterA++;
+                    }
+                });
+                interestB.forEach((item) => {
+                    if (interests.includes(item)) {
+                        counterB++;
+                    }
+                });
+                if (counterA < counterB) {
+                    return (true);
+                }
+                return (false);
+            });
+
+            data.sort((userA, userB) => {
+                userA = getCurrentUser(userA);
+                userA = getCurrentUser(userB);
+                let currentLat = parseFloat(req.body.lat);
+                let currentLng = parseFloat(req.body.lng);
+                let radius = 6378137;
+
+                var deltaLat1 = parseFloat(currentLat) - parseFloat(userA.latitude);
+                var deltaLon1 = parseFloat(currentLng) - parseFloat(userA.longitude);
+                var angle1 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat1 / 2), 2) + Math.cos(currentLat) * Math.cos(parseFloat(userA.latitude)) * Math.pow( Math.sin ( deltaLon1 / 2), 2) ) );
+                var distance1 = radius * angle1;
+
+                var deltaLat2 = parseFloat(currentLat) - parseFloat(userB.latitude);
+                var deltaLon2 = parseFloat(currentLng) - parseFloat(userB.longitude);
+                var angle2 = 2 * Math.asin( Math.sqrt( Math.pow( Math.sin( deltaLat2 / 2), 2) + Math.cos(currentLat) * Math.cos(parseFloat(userB.latitude)) * Math.pow( Math.sin ( deltaLon2 / 2), 2) ) );
+                var distance2 = radius * angle2;
+
+                if (distance1 < distance2) {
+                    return (true);
+                }
+                return (false);
+            });
+
+            User.findById(req.body.id, (err, user) => {
+                if (err) {
+                    throw err;
+                }
+                if (user) {
+                    var currentUser = getCurrentUser(user);
+                    
+                    currentUser.blockedUser.forEach((itemId) => {
+                        data = data.filter(item => item._id != itemId);
+                    });
+
+                    var sendData = data.slice(0, 6);
+                    res.send(sendData);
+                }
+            });
+        });
+    });
 };
 
 function getCurrentUser(user){
@@ -128,4 +268,10 @@ function getCurrentUser(user){
         currentUser = user.google;
     }
     return (currentUser);
+}
+function isLoggedOn(req, res, next) {
+    if (req.isAuthenticated()) {
+        return (next());
+    }
+    res.redirect('/');
 }

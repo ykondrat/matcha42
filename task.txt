@@ -28,17 +28,15 @@
 3. Browsing
 	+ The user must be able to easily get a list of suggestions that match his/her profile.
 	
-	+/- You will only propose “interesting” profiles for example, only men for a heterosexual
+	+ You will only propose “interesting” profiles for example, only men for a heterosexual
 		girls. You must manage bisexuality. If the orientation isn’t specified, the user will
 		be considered bi-sexual.
 
 	You must cleverly match profiles:
-		- Same geographic area as the user.
-		- With a maximum of common tags.
-		- With a maximum “fame rating”.
-		- You must show in priority people from the same geographical area.
-		- The list must be sortable by age, localization, “fame rating” and common tags.
-		- The list must be filterable by age, localization, “fame rating” and common tags.
+		+ Same geographic area as the user.
+		+ With a maximum of common tags.
+		+ With a maximum “fame rating”.
+		+ You must show in priority people from the same geographical area.
 
 4. Research
 	+ The user must be able to run an advanced research selecting one or a few criterias such
@@ -47,7 +45,7 @@
 		+ A “fame rating” gap.
 		+ A location.
 		+ One or multiple interests tags.
-	+/- As per the suggestion list, the resulting list must be sortable and filterable by age,
+	+ As per the suggestion list, the resulting list must be sortable and filterable by age,
 	location, “fame rating” and tags.
 
 5. Profile of other users
@@ -85,7 +83,7 @@
 8. Bonus
 	+ Add Omniauth strategies for the connection.
 	+ Import pictures from Facebook and/or Google+.
-	- Create an interactive map of the users (which implies a more precise GPS localization
+	+ Create an interactive map of the users (which implies a more precise GPS localization
 	  via JavaScript).
 	+ Infinit pagination
 
