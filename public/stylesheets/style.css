@@ -208,6 +208,9 @@ input[type="file"] {
     .form-photo-btn button:hover {
       cursor: pointer; }
 
+.not-avatar {
+  width: 5vmin; }
+
 .profile-search {
   margin-top: 100px;
   display: none; }
@@ -287,6 +290,12 @@ input[type="checkbox"] {
 .info-search {
   display: none; }
 
+.online {
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  text-shadow: none; }
+
 .modal_window {
   position: fixed;
   z-index: 1;
@@ -351,6 +360,17 @@ input[type="checkbox"] {
   display: none; }
 
 #matcha-header {
+  padding-bottom: 7px;
+  padding-top: 7px;
+  font-weight: bold;
+  color: #D2D2D2;
+  text-shadow: 2px 2px #468939; }
+
+.profile-message {
+  margin-top: 100px;
+  display: none; }
+
+#message-header {
   padding-bottom: 7px;
   padding-top: 7px;
   font-weight: bold;

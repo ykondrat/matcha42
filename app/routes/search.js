@@ -156,7 +156,7 @@ module.exports = (app) => {
             }
             data = data.filter((item) => {
                 var currentUser = getCurrentUser(item);
-                let from = parseInt(req.body.rating) - 20;
+                let from = parseInt(req.body.rating) - 50;
                 let to = parseInt(req.body.rating) + 50;
                 if (parseInt(currentUser.fameRating) >= from &&  parseInt(currentUser.fameRating) <= to) {
                     return (true);
@@ -183,7 +183,7 @@ module.exports = (app) => {
                     age--;
                 }
 
-                if (age >= ageUser - 2 && age <= ageUser + 2) {
+                if (age >= ageUser - 4 && age <= ageUser + 4) {
                     return (true);
                 } 
                 return (false);
@@ -255,6 +255,14 @@ module.exports = (app) => {
             });
         });
     });
+    app.post('/get-userId', (req, res) => {
+        User.findById(req.body.id, (err, user) => {
+            if (err)
+                throw err;
+            if (user)
+                res.send(user);
+        });
+    });
 };
 
 function getCurrentUser(user){
@@ -269,6 +277,7 @@ function getCurrentUser(user){
     }
     return (currentUser);
 }
+
 function isLoggedOn(req, res, next) {
     if (req.isAuthenticated()) {
         return (next());

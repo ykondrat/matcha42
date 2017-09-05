@@ -22,6 +22,7 @@ const storage       = multer.diskStorage({
 const uploads		= multer({ storage: storage });
 
 const app = express();
+
 const port = process.env.PORT || 8000;
 
 require('./config/passport')(passport);
@@ -56,6 +57,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+require('./app/routes/online')(app);
+require('./app/routes/messages')(app);
 require('./app/routes/search')(app);
 require('./app/routes/block-report')(app);
 require('./app/routes/likes')(app);
@@ -65,7 +68,8 @@ require('./app/routes/notification')(app);
 require('./app/routes/auth')(app, passport);
 require('./app/routes/main')(app);
 
-app.listen(port);
+app.listen(port)
+
 console.log('\x1b[33m%s\x1b[0m', '========= Matcha server =========');
 console.log('\x1b[32m%s\x1b[0m', `server is runing on port: ${port}`);
 console.log('\x1b[33m%s\x1b[0m', '=================================');

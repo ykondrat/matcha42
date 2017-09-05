@@ -13,6 +13,19 @@ if (User.local.email) {
 }
 $(document).ready(function() {
 	var data = {
+		id: UserID,
+		date: new Date()
+	}
+	$.ajax({
+		type: 'POST',
+		url: 'http://localhost:8000/online',
+		dataType: 'json',
+		data: data,
+		success: function(response) {
+			
+		}
+	});
+	var data = {
 		id: UserID
 	};
 	$.ajax({
@@ -77,8 +90,11 @@ $(document).ready(function() {
         		dataType: 'json',
         		data: dataSearch,
         		success: function(response) {
+        			var today = new Date();
+
         			response.forEach((user) => {
         				var currentUser;
+        				let online;
 
         				if (user.local.email) {
 					        currentUser = user.local;
@@ -87,10 +103,17 @@ $(document).ready(function() {
 					    } else {
 					        currentUser = user.google;
 					    }
+					    var diff = Math.abs(today - new Date(currentUser.online));
+					    var minutes = Math.floor((diff/1000)/60);
+					    if (minutes > 15) {
+					    	online = currentUser.online.substring(0, 21);
+					    } else {
+					    	online = 'online';
+					    }
     					$(`
     						<div class="user-search-profile">
     							<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}|^|${currentUser.city}|^|${currentUser.country}</p>
-        						<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
+        						<h3> ${currentUser.firstName} ${currentUser.lastName} <span class='online'>${online}</span></h3>
         						<img src="${currentUser.avatar}" class="user-search-photo">
         						<p>
         							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
@@ -109,26 +132,39 @@ $(document).ready(function() {
 		}
 	});
 	stateForMatcha();
-	// setInterval(() => {
-	// 	var data = {
-	// 		id: UserID
-	// 	};
+	setInterval(() => {
+		var data = {
+			id: UserID
+		};
 
-	// 	$.ajax({
-	// 		type: 'POST',
-	// 		url: 'http://localhost:8000/get-notification',
-	// 		dataType: 'json',
-	// 		data: data,
-	// 		success: function(response) {
-	// 			if (response.subject) {
-	// 				$('.badge').text(response.subject.length);
-	// 			}
-	// 		}
-	// 	});
-	// }, 5000);
+		$.ajax({
+			type: 'POST',
+			url: 'http://localhost:8000/get-notification',
+			dataType: 'json',
+			data: data,
+			success: function(response) {
+				if (response.subject) {
+					$('.badge').text(response.subject.length);
+				}
+			}
+		});
+	}, 2000);
+});
+$(window).on('click', function(){
+	var data = {
+		id: UserID,
+		date: new Date()
+	}
+	$.ajax({
+		type: 'POST',
+		url: 'http://localhost:8000/online',
+		dataType: 'json',
+		data: data
+	});
 });
 function stateForMatcha() {
 	if (User.active == 1) {
+		$(".profile-matcha .profile-view .user-search-profile").remove();
 		var data = {
 			id: UserID,
 			gender: User.gender,
@@ -146,8 +182,10 @@ function stateForMatcha() {
 			dataType: 'json',
 			data: data,
 			success: function(response) {
+				var today = new Date();
 				response.forEach((user) => {
 					var currentUser;
+					let online;
 					if (user.local.email) {
 				        currentUser = user.local;
 				    } else if (user.facebook.email) {
@@ -155,10 +193,17 @@ function stateForMatcha() {
 				    } else {
 				        currentUser = user.google;
 				    }
+				    var diff = Math.abs(today - new Date(currentUser.online));
+				    var minutes = Math.floor((diff/1000)/60);
+				    if (minutes > 15) {
+				    	online = currentUser.online.substring(0, 21);
+				    } else {
+				    	online = 'online';
+				    }
 					$(`
 						<div class="user-search-profile">
 							<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}|^|${currentUser.city}|^|${currentUser.country}</p>
-							<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
+							<h3> ${currentUser.firstName} ${currentUser.lastName} <span class='online'>${online}</span></h3>
 							<img src="${currentUser.avatar}" class="user-search-photo">
 							<p>
 								<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
@@ -203,21 +248,34 @@ var ProfileHeader = React.createClass({
 			dataType: 'json',
 			data: data,
 			success: function(response) {
+				let i = 0;
+
 				$(`
 					<div id="modal" class="modal_window">
 						<div class="modal_form">
 						</div>
 					</div>
 				`).appendTo($('#content'));
+				
 				if (response.subject.length < 1) {
 					$(`<p>There is no notification yet</p>`).appendTo($('.modal_form'));
+					if (response.view.length > 0) {
+						response.view.forEach((item) => {
+							$(`<p>${ item }</p>`).appendTo($('.modal_form'));
+						});    
+					} 
 				} else {
 					response.subject.forEach((item) => {
-						$(`<p>${ item }</p>`).appendTo($('.modal_form'));
+						if (item == 'Your profile was viewed') {
+							$(`<p>${ response.view[i] }</p>`).appendTo($('.modal_form'));
+							i++;	
+						} else {
+							$(`<p>${ item }</p>`).appendTo($('.modal_form'));
+						}
 					});
 				}
 			}
-		})
+		});
 	},
 	handleLogout() {
 		window.location.href = "http://localhost:8000/logout"
@@ -229,6 +287,7 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 		let profileMatcha 			= document.querySelector('.profile-matcha');
+		let profileMessage 			= document.querySelector('.profile-message');
 
 		sendSearch = false;
 		profileSettings.style.display = 'block';
@@ -237,6 +296,7 @@ var ProfileHeader = React.createClass({
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'none';
+		profileMessage.style.display = 'none';
 		var coords = {
 			lat: parseFloat(User.latitude),
 			lng: parseFloat(User.longitude)
@@ -259,6 +319,7 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 		let profileMatcha 			= document.querySelector('.profile-matcha');
+		let profileMessage 			= document.querySelector('.profile-message');
 
 		profileMatcha.style.display = 'none';
 		sendSearch = false;
@@ -267,6 +328,7 @@ var ProfileHeader = React.createClass({
 		profile.style.display = 'none';
 		profileModify.style.display = 'block';
 		profileSearch.style.display = 'none';
+		profileMessage.style.display = 'none';
 	},
 	handleProfile() {
 		let profile 				= document.querySelector('.profile-main');
@@ -275,6 +337,7 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 		let profileMatcha 			= document.querySelector('.profile-matcha');
+		let profileMessage 			= document.querySelector('.profile-message');
 
 		sendSearch = false;
 		profileSettings.style.display = 'none';
@@ -283,6 +346,7 @@ var ProfileHeader = React.createClass({
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'none';
 		profileMatcha.style.display = 'none';
+		profileMessage.style.display = 'none';
 	},
 	handlePhotos() {
 		let profile 				= document.querySelector('.profile-main');
@@ -291,6 +355,7 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 		let profileMatcha 			= document.querySelector('.profile-matcha');
+		let profileMessage 			= document.querySelector('.profile-message');
 
 		sendSearch = false;
 		profileSettings.style.display = 'none';
@@ -299,6 +364,7 @@ var ProfileHeader = React.createClass({
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'none';
 		profileMatcha.style.display = 'none';
+		profileMessage.style.display = 'none';
 	},
 	handleSearch() {
 		let profile 				= document.querySelector('.profile-main');
@@ -307,6 +373,7 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 		let profileMatcha 			= document.querySelector('.profile-matcha');
+		let profileMessage 			= document.querySelector('.profile-message');
 
 		sendSearch = true;
 		profileSettings.style.display = 'none';
@@ -315,6 +382,7 @@ var ProfileHeader = React.createClass({
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'block';
 		profileMatcha.style.display = 'none';
+		profileMessage.style.display = 'none';
 	},
 	handleMatcha(){
 		let profile 				= document.querySelector('.profile-main');
@@ -323,14 +391,134 @@ var ProfileHeader = React.createClass({
 		let profileModify 			= document.querySelector('.profile-modify');
 		let profileSearch 			= document.querySelector('.profile-search');
 		let profileMatcha 			= document.querySelector('.profile-matcha');
+		let profileMessage 			= document.querySelector('.profile-message');
 
-		sendSearch = true;
+		stateForMatcha();
+		sendSearch = false;
 		profileSettings.style.display = 'none';
 		profileSettingsPhoto.style.display = 'none';
 		profile.style.display = 'none';
 		profileModify.style.display = 'none';
 		profileSearch.style.display = 'none';
 		profileMatcha.style.display = 'block';
+		profileMessage.style.display = 'none';
+	},
+	handleMesages() {
+		let profile 				= document.querySelector('.profile-main');
+		let profileSettings 		= document.querySelector('.profile-settings');
+		let profileSettingsPhoto 	= document.querySelector('.profile-settings-photo');
+		let profileModify 			= document.querySelector('.profile-modify');
+		let profileSearch 			= document.querySelector('.profile-search');
+		let profileMatcha 			= document.querySelector('.profile-matcha');
+		let profileMessage 			= document.querySelector('.profile-message');
+
+		sendSearch = false;
+		profileSettings.style.display = 'none';
+		profileSettingsPhoto.style.display = 'none';
+		profile.style.display = 'none';
+		profileModify.style.display = 'none';
+		profileSearch.style.display = 'none';
+		profileMatcha.style.display = 'none';
+		profileMessage.style.display = 'block';
+		
+		let data = {
+			id: UserID
+		};
+		var UsersCon = [];
+
+		$.ajax({
+			type: 'POST',
+			url: 'http://localhost:8000/messages',
+			dataType: 'json',
+			data: data,
+			success: function(response){
+				response.forEach((item, index) => {
+					if (item.first == UserID) {
+						$.ajax({
+							type: 'POST',
+							url: 'http://localhost:8000/get-userId',
+							dataType: 'json',
+							data: { id: item.second },
+							success: function(response) {
+								UsersCon.push(response);
+							}
+						});
+					} else {
+						$.ajax({
+							type: 'POST',
+							url: 'http://localhost:8000/get-userId',
+							dataType: 'json',
+							data: { id: item.first },
+							success: function(response) {
+								UsersCon.push(response);
+							}
+						});
+					}
+					setTimeout(()=>{
+						item.messages.forEach((p) => {
+							$(p).appendTo($(`#collapse${index} .messages`));
+						});
+					}, 700);			
+				});
+			}
+		});
+		setTimeout(() => {
+			UsersCon.forEach((item, index) => {
+				var user;
+				if (item.local.email) {
+					user = item.local;
+				} else if (item.facebook.email) {
+					user = item.facebook;
+				} else {
+					user = item.google;
+				}
+				$(`
+					<div class="card">
+				    	<div class="card-header" role="tab" id="heading${index}">
+					      	<h5 class="mb-0">
+					        	<a data-toggle="collapse" data-parent="#accordion" href="#collapse${index}" aria-expanded="true" aria-controls="collapse${index}">
+					          		<img src="${user.avatar}" class="not-avatar"> ${user.firstName} ${user.lastName}
+					        	</a>
+					      	</h5>
+				    	</div>
+				    
+					    <div id="collapse${index}" class="collapse" role="tabpanel" aria-labelledby="heading${index}">
+					    	<div class="card-block">
+						        <div class="messages">
+
+						        </div>
+								<textarea type="text" id="text${index}"></textarea><button onclick="addMessage(this)" data-index=${index} data-sender=${UserID} data-img=${User.avatar} data-to=${item._id}>Send</button>
+					    	</div>
+					    </div>
+				  </div>
+				`).appendTo('#accordion');
+			});
+		}, 500);
+		setTimeout(() => {
+			setInterval(() => {
+				$.ajax({
+					type: 'POST',
+					url: 'http://localhost:8000/messages',
+					dataType: 'json',
+					data: data,
+					success: function(response){
+						response.forEach((item, index) => {
+							if ($(`#collapse${index} .messages p`).length) {
+								var arr = [];
+								var i = $(`#collapse${index} .messages p`).length;
+								for (; i < item.messages.length; i++) {
+									arr.push(item.messages[i]);
+								};
+								
+								arr.forEach((p) => {
+									$(p).appendTo($(`#collapse${index} .messages`));
+								});
+							}
+						});
+					}
+				});
+			}, 5000);
+		}, 900);	
 	},
 	render() {
 		var imgStyle = {
@@ -1009,8 +1197,11 @@ var ProfileSearch = React.createClass({
         		dataType: 'json',
         		data: dataSearch,
         		success: function(response) {
+        			var today = new Date();
+
         			response.forEach((user) => {
         				var currentUser;
+        				let online;
 
         				if (user.local.email) {
 					        currentUser = user.local;
@@ -1019,10 +1210,19 @@ var ProfileSearch = React.createClass({
 					    } else {
 					        currentUser = user.google;
 					    }
+					    var diff = Math.abs(today - new Date(currentUser.online));
+					    var minutes = Math.floor((diff/1000)/60);
+					    var dateuser = new Date(currentUser.online);
+					    
+					    if (minutes > 15) {
+					    	online = currentUser.online.substring(0, 21);
+					    } else {
+					    	online = 'online';
+					    }
     					$(`
     						<div class="user-search-profile">
         						<p class="info-search">${currentUser.birthDate}|^|${currentUser.fameRating}|^|${currentUser.interests}|^|${currentUser.latitude}|^|${currentUser.longitude}|^|${currentUser.city}|^|${currentUser.country}</p>
-        						<h3> ${currentUser.firstName} ${currentUser.lastName} </h3>
+        						<h3> ${currentUser.firstName} ${currentUser.lastName} <span class='online'>${online}</span></h3>
         						<img src="${currentUser.avatar}" class="user-search-photo">
         						<p>
         							<i class="fa fa-2x fa-thumbs-o-up" aria-hidden="true" value="${user._id}" data-id="${UserID}" onclick="sendLike(this)"></i>
@@ -1316,6 +1516,19 @@ var ProfileSearch = React.createClass({
 		);		
 	}
 });
+var ProfileMessages = React.createClass({
+	render(){
+		return( 
+			<div className="container profile-message">
+        		<div className="profile-view">
+        			<h1 id="message-header">Messages</h1>
+        			<div id="accordion" role="tablist" aria-multiselectable="true">
+        			</div>
+        		</div>
+        	</div>
+		)
+	}
+}); 
 ReactDOM.render(
 	<div>
     	<ProfileHeader user={User} />
@@ -1325,6 +1538,7 @@ ReactDOM.render(
     	<ProfileModify user={User} />
     	<ProfilePhoto user={User} />
     	<ProfileSearch user={User} />
+    	<ProfileMessages />
     </div>,
     document.getElementById('content')
 );

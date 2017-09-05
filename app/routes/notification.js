@@ -1,5 +1,5 @@
 const Notification = require('../models/notification');
-
+const User         = require('../models/user');
 module.exports = (app) => {
 	app.post('/notification-view', (req, res) => {
         Notification.findOne({ 'to': req.body.id }, (err, notification) => {
@@ -7,23 +7,41 @@ module.exports = (app) => {
                     throw err;
                 }
                 if (notification) {
-                    notification.subject.push('Your profile was viewed');
- 
-                    notification.save(function (err) {
-                        if (err)
+                    User.findById(req.body.from, (err, user) => {
+                        if (err) {
                             throw err;
-                        res.sendStatus(200);
+                        }
+                        if (user) {
+                            user = getCurrentUser(user);
+                            notification.subject.push('Your profile was viewed');
+                            notification.view.push(`Your profile was viewed by ${user.firstName} ${user.lastName} <img src="${user.avatar}" class="not-avatar">`);
+
+                            notification.save(function(err) {
+                                if (err)
+                                   throw err;
+                                res.sendStatus(200);
+                            });        
+                        }
                     });
                 } else {
-                    var newNotification = new Notification();
-                    newNotification.from = req.body.from;
-                    newNotification.to = req.body.id;
-                    newNotification.subject = 'Your profile was viewed';
+                    User.findById(req.body.from, (err, user) => {
+                        if (err) {
+                            throw err;
+                        }
+                        if (user) {
+                            user = getCurrentUser(user);
+                            var newNotification = new Notification();
+                            newNotification.from = req.body.from;
+                            newNotification.to = req.body.id;
+                            newNotification.subject = 'Your profile was viewed';
+                            newNotification.view = `Your profile was viewed by ${user.firstName} ${user.lastName} <img src="${user.avatar}" class="not-avatar">`;
 
-                    newNotification.save(function(err) {
-                        if (err)
-                           throw err;
-                        res.sendStatus(200);
+                            newNotification.save(function(err) {
+                                if (err)
+                                   throw err;
+                                res.sendStatus(200);
+                            });        
+                        }
                     });
                 }
         });
@@ -100,3 +118,16 @@ module.exports = (app) => {
         });
     });
 };
+
+function getCurrentUser(user){
+    var currentUser;
+
+    if (user.local.email) {
+        currentUser = user.local;
+    } else if (user.facebook.email) {
+        currentUser = user.facebook;
+    } else {
+        currentUser = user.google;
+    }
+    return (currentUser);
+}

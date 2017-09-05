@@ -224,3 +224,34 @@ window.onclick = function(event) {
     	$('#modal').remove();
     }
 };
+
+function addMessage(elem) {
+	$(`<p><img src="${elem.dataset.img}" style="width: 4vmin; margin-right: 10px">${$(`#text${elem.dataset.index}`).val()}</p>`).appendTo($(`#collapse${elem.dataset.index} .messages`));
+	var data = elem.dataset;
+	data.message = `<p><img src="${elem.dataset.img}" style="width: 4vmin; margin-right: 10px">${$(`#text${elem.dataset.index}`).val()}</p>`;
+	$.ajax({
+		type: 'POST',
+		url: 'http://localhost:8000/set-message',
+		dataType: 'json',
+		data: data
+	});
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

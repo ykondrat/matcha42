@@ -27,7 +27,8 @@ const userSchema = mongoose.Schema({
         biography: String,
         sexual: String,
         fameRating: Number,
-        birthDate: String
+        birthDate: String,
+        online: String
     },
     facebook: {
         id:         String,
@@ -55,7 +56,8 @@ const userSchema = mongoose.Schema({
         biography: String,
         sexual: String,
         fameRating: Number,
-        birthDate: String
+        birthDate: String,
+        online: String
     },
     google: {
         id:         String,
@@ -83,7 +85,8 @@ const userSchema = mongoose.Schema({
         biography: String,
         sexual: String,
         fameRating: Number,
-        birthDate: String
+        birthDate: String,
+        online: String
     }
 });
 
