@@ -15,15 +15,12 @@ $(document).ready(function() {
 	var data = {
 		id: UserID,
 		date: new Date()
-	}
+	};
 	$.ajax({
 		type: 'POST',
 		url: 'http://localhost:8000/online',
 		dataType: 'json',
-		data: data,
-		success: function(response) {
-			
-		}
+		data: data
 	});
 	var data = {
 		id: UserID
@@ -83,7 +80,6 @@ $(document).ready(function() {
 		if ($(document).height() - $(window).height() == $(window).scrollTop() && sendSearch) {
 			$('#loading').show();
 			limit += 6;
-
 			$.ajax({
     			type: 'POST',
         		url: 'http://localhost:8000/search/' + limit,
@@ -136,7 +132,6 @@ $(document).ready(function() {
 		var data = {
 			id: UserID
 		};
-
 		$.ajax({
 			type: 'POST',
 			url: 'http://localhost:8000/get-notification',
@@ -425,7 +420,7 @@ var ProfileHeader = React.createClass({
 			id: UserID
 		};
 		var UsersCon = [];
-
+		$('.card').remove();
 		$.ajax({
 			type: 'POST',
 			url: 'http://localhost:8000/messages',
@@ -487,7 +482,7 @@ var ProfileHeader = React.createClass({
 						        <div class="messages">
 
 						        </div>
-								<textarea type="text" id="text${index}"></textarea><button onclick="addMessage(this)" data-index=${index} data-sender=${UserID} data-img=${User.avatar} data-to=${item._id}>Send</button>
+								<textarea type="text" id="text${index}"></textarea><button class="btn btn-success"onclick="addMessage(this)" data-index=${index} data-sender=${UserID} data-img=${User.avatar} data-to=${item._id}>Send</button>
 					    	</div>
 					    </div>
 				  </div>
@@ -517,7 +512,8 @@ var ProfileHeader = React.createClass({
 						});
 					}
 				});
-			}, 5000);
+			}, 2000);
+			$('.messages p').filter(":even").css("background-color", "#C7F7CA");
 		}, 900);	
 	},
 	render() {
@@ -643,7 +639,6 @@ var ProfileInfo = React.createClass({
     }
 });
 var ProfileModify = React.createClass({
-	
 	getInitialState() {
         return {
             firstName: this.props.user.firstName,
@@ -652,23 +647,18 @@ var ProfileModify = React.createClass({
             password: ''
         };
     },
-
     handleFirstName(event) {
     	this.setState({ firstName: event.target.value });
     },
-    
     handleLastName(event) {
     	this.setState({ lastName: event.target.value });
     },
-    
     handleEmail(event) {
     	this.setState({ email: event.target.value });
-    },
-    
+    },  
     handlePassword(event) {
 		this.setState({ password: event.target.value });
-    },
-       
+    }, 
     handleSave(event) {
     	$('.error-settings').remove();
     	var nameFilter = /^[A-Za-z]+$/;
@@ -711,7 +701,6 @@ var ProfileModify = React.createClass({
     		window.location.href = 'http://localhost:8000/profile';
 	    }
     },
-
 	render() {
 		let localUser = null;
 
@@ -727,7 +716,6 @@ var ProfileModify = React.createClass({
 		        			</div>
 	        			</div>
 		}
-
         return (
         	<div className="container profile-modify">
         		<div className="profile-view">
@@ -752,7 +740,6 @@ var ProfileModify = React.createClass({
     }
 });
 var ProfileSettings = React.createClass({
-	
 	getInitialState() {
         return {
             gender: this.props.user.gender || 'male',
@@ -763,31 +750,24 @@ var ProfileSettings = React.createClass({
             location: ''
         };
     },
-
     handleGender(event) {
     	this.setState({ gender: event.target.value });
     },
-    
     handleSexual(event) {
     	this.setState({ sexual: event.target.value });
     },
-    
     handleBirthday(event) {
     	this.setState({ birthday: event.target.value });
     },
-    
     handleInterest(event) {
 		this.setState({ interests: event.target.value });
     },
-    
     handleAbout(event) {
     	this.setState({ about: event.target.value });	
     },
-
     handleLocation(event) {
     	this.setState({ location: event.target.value });	
     },
-    
     handleSave(event) {
     	$('.error-settings').remove();
     	var interests = this.state.interests.split(' ');
@@ -802,7 +782,6 @@ var ProfileSettings = React.createClass({
 	        city: '',
 		    country: ''
     	};
-
     	if (address.length > 1) {
 	    	geocoder.geocode( { 'address': address}, function(results, status) {
 	        	if (status == 'OK') {
@@ -886,7 +865,6 @@ var ProfileSettings = React.createClass({
     		}, 1000);
     	}
     },
-
 	render() {
         return (
 	        	<div className="container profile-settings">
@@ -935,7 +913,6 @@ var ProfileSettings = React.createClass({
     }
 });
 var ProfilePhoto = React.createClass({
-	
 	handlePhoto(event) {
 		var reader  = new FileReader();
 
@@ -948,7 +925,6 @@ var ProfilePhoto = React.createClass({
 			document.querySelector(`.${event.target.name}`).src = "";
 		}
 	},
-
 	handleDeletePhoto(event) {	
 		if (document.querySelector(`.${event.target.attributes.name.value}`).src != 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png') {
 			var data = {
@@ -966,7 +942,6 @@ var ProfilePhoto = React.createClass({
 	    		});
 		}
 	},
-
 	handleSetAvatar(event) {
 		if (document.querySelector(`.${event.target.attributes.name.value}`).src != 'https://upload.wikimedia.org/wikipedia/commons/d/d3/User_Circle.png') {
 			let checker = document.querySelector(`.${event.target.attributes.name.value}`).src.slice(0,4);
@@ -992,7 +967,6 @@ var ProfilePhoto = React.createClass({
 			}
 		}
 	},
-
 	render() {
 		let avatar = this.props.user.avatar;
 		let photos = {
@@ -1198,7 +1172,6 @@ var ProfileSearch = React.createClass({
         		data: dataSearch,
         		success: function(response) {
         			var today = new Date();
-
         			response.forEach((user) => {
         				var currentUser;
         				let online;

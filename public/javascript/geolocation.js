@@ -4,7 +4,6 @@ var UserPosition = {
         country: '',
         city: ''
 };
-    
 window.onload = function() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
@@ -26,7 +25,6 @@ window.onload = function() {
         });
     }
 }
-
 setTimeout(function(){
     $.ajax({
         type: 'POST',

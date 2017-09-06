@@ -69,7 +69,6 @@ require('./app/routes/auth')(app, passport);
 require('./app/routes/main')(app);
 
 app.listen(port)
-
 console.log('\x1b[33m%s\x1b[0m', '========= Matcha server =========');
 console.log('\x1b[32m%s\x1b[0m', `server is runing on port: ${port}`);
 console.log('\x1b[33m%s\x1b[0m', '=================================');

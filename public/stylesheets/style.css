@@ -377,6 +377,25 @@ input[type="checkbox"] {
   color: #D2D2D2;
   text-shadow: 2px 2px #468939; }
 
+.card-block {
+  text-align: left;
+  height: 400px;
+  overflow-y: scroll; }
+  .card-block textarea {
+    width: 80%; }
+  .card-block button {
+    width: 100px;
+    margin-bottom: 27px;
+    margin-left: 5px; }
+  .card-block button:hover {
+    cursor: pointer; }
+
+.card-header {
+  text-align: left; }
+  .card-header a {
+    text-decoration: none;
+    color: black; }
+
 #map, #interactive_map {
   margin-left: auto;
   margin-right: auto;

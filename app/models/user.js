@@ -89,11 +89,9 @@ const userSchema = mongoose.Schema({
         online: String
     }
 });
-
 userSchema.methods.generateHash = function (password) {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(9));
 }
-
 userSchema.methods.validPassword = function (password) {
     return bcrypt.compareSync(password, this.local.password);
 }

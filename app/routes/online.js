@@ -21,7 +21,6 @@ module.exports = (app) => {
 		});
 	});
 }
-
 function getCurrentUser(user){
     var currentUser;
 

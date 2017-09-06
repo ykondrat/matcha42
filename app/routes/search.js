@@ -264,7 +264,6 @@ module.exports = (app) => {
         });
     });
 };
-
 function getCurrentUser(user){
     var currentUser;
 
@@ -277,7 +276,6 @@ function getCurrentUser(user){
     }
     return (currentUser);
 }
-
 function isLoggedOn(req, res, next) {
     if (req.isAuthenticated()) {
         return (next());

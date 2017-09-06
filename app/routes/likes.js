@@ -49,15 +49,7 @@ module.exports = (app) => {
                                             if (err)
                                                throw err;
                                             if (connect) {
-                                                var newNotification = new Notification();
-                                                newNotification.from = req.body.who;
-                                                newNotification.to = req.body.whom;
-                                                newNotification.subject = 'You have a new connection';
-                                                 
-                                                newNotification.save(function(err) {
-                                                    if (err)
-                                                       throw err;
-                                                });
+
                                             }
                                         });
                                     }                               
@@ -161,7 +153,6 @@ module.exports = (app) => {
         });
     });
 };
-
 function getCurrentUser(user){
     var currentUser;
 

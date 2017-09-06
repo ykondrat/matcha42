@@ -9,7 +9,6 @@ const transporter = nodemailer.createTransport({
         pass: ''
     }
 });
-
 module.exports = (app, passport) => {
     app.get('/logout', (req, res) => {
         req.logout();
@@ -190,7 +189,6 @@ module.exports = (app, passport) => {
         });
     });
 };
-
 function isLoggedOn(req, res, next) {
     if (req.isAuthenticated()) {
         return (next());

@@ -27,7 +27,6 @@ module.exports = (app, uploads) => {
                         } else if (currentUser.photos[photo.fieldname] == '' || !currentUser.photos[photo.fieldname]) {
                             currentUser.fameRating += 10;
                         }
-                        
                         currentUser.photos[photo.fieldname] = `http://localhost:8000${path}`;
                     }
                 });
@@ -49,7 +48,6 @@ module.exports = (app, uploads) => {
             }
             if (user) {
             	var currentUser = getCurrentUser(user);
-
             	let photo = currentUser.photos[req.body.photo].split('/'); 
                 photo = photo[photo.length - 1];
                 let path = __dirname + '/../public/uploads/' + photo;
@@ -93,7 +91,6 @@ module.exports = (app, uploads) => {
         });
     });
 };
-
 function getCurrentUser(user){
 	var currentUser;
 

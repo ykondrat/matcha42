@@ -45,14 +45,28 @@ module.exports = (app) => {
                     if (err)
                         throw err;
                     if (updatedCon) {
-                    	var newNotification = new Notification();
-                        newNotification.from = req.body.sender;
-                        newNotification.to = req.body.to;
-                        newNotification.subject = 'You have a new message';
-                         
-                        newNotification.save(function(err) {
-                            if (err)
-                               throw err;
+                    	Notification.findOne({ 'to': req.body.to}, (err, not) => {
+                            if (err) {
+                                throw err;
+                            }
+                            if (not) {
+                                not.subject.push('You have a new message');
+
+                                not.save(function(err) {
+                                    if (err)
+                                       throw err;
+                                });
+                            } else {
+                                var newNotification = new Notification();
+                                newNotification.from = req.body.sender;
+                                newNotification.to = req.body.to;
+                                newNotification.subject = 'You have a new message';
+                                 
+                                newNotification.save(function(err) {
+                                    if (err)
+                                       throw err;
+                                });
+                            }
                         });
                         res.sendStatus(200);
                     }
@@ -69,14 +83,28 @@ module.exports = (app) => {
 		                    if (err)
 		                        throw err;
 		                    if (updatedCon) {
-		                    	var newNotification = new Notification();
-		                        newNotification.from = req.body.sender;
-		                        newNotification.to = req.body.to;
-		                        newNotification.subject = 'You have a new message';
-		                         
-		                        newNotification.save(function(err) {
-		                            if (err)
-		                               throw err;
+		                    	Notification.findOne({ 'to': req.body.to}, (err, not) => {
+		                            if (err) {
+		                                throw err;
+		                            }
+		                            if (not) {
+		                                not.subject.push('You have a new message');
+
+		                                not.save(function(err) {
+		                                    if (err)
+		                                       throw err;
+		                                });
+		                            } else {
+		                                var newNotification = new Notification();
+		                                newNotification.from = req.body.sender;
+		                                newNotification.to = req.body.to;
+		                                newNotification.subject = 'You have a new message';
+		                                 
+		                                newNotification.save(function(err) {
+		                                    if (err)
+		                                       throw err;
+		                                });
+		                            }
 		                        });
 		                        res.sendStatus(200);
 		                    }

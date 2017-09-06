@@ -28,14 +28,32 @@ module.exports = (app) => {
                 }
 
                 if (saver) {
-                	// Connection.remove( { $or:[ { first: req.body.whom, second: req.body.who }, {first: req.body.who, second: req.body.whom} ]} , (err, removed) => {
-                 //        if (err) {
-                 //            throw err;
-                 //        }
-                 //        if (removed) {
-                 //            console.log(removed);
-                 //        }
-                 //    });
+                	Connection.findOne({ 'first': req.body.who, 'second': req.body.whom }, (err, con) => {
+                        if (err) {
+                            throw err;
+                        }
+                        if (con) {
+                            Connection.findByIdAndRemove(con._id, (err, con) => {  
+                                if (err) {
+                                    throw err;
+                                }
+                            });
+                        }
+                        if (!con) {
+                            Connection.findOne({ 'first': req.body.whom, 'second': req.body.who }, (err, con) => {
+                                if (err) {
+                                    throw err;
+                                }
+                                if (con) {
+                                    Connection.findByIdAndRemove(con._id, (err, con) => {  
+                                        if (err) {
+                                            throw err;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
                 	user.save((err, updatedUser) => {
 	                    if (err) {
 	                        throw err;
@@ -60,7 +78,6 @@ module.exports = (app) => {
         });  
     });
 };
-
 function getCurrentUser(user){
 	var currentUser;
 
